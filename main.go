@@ -2,16 +2,23 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
+	"subtrans/trans"
+	"unicode/utf8"
 )
 
 const targetDirName = "subtrans"
 
 func main() {
+	file, _ := os.ReadFile("E:\\go-projects\\subtrans\\testdata\\sources\\subtrans\\01 - Understanding Parallel Computing.srt")
+	if !utf8.Valid(file) {
+		panic("Invalit")
+	}
 	d := pollSourceDirectory()
 
 	ff, err := scanSourceDirectory(d)
@@ -32,26 +39,27 @@ func main() {
 	}
 }
 func processFile(path string) error {
-	//source, err := readFile(path)
-	//if err != nil {
-	//	return err
-	//}
-	//target, err := trans.Translate(source, "en", "ru")
-	//if err != nil {
-	//	return err
-	//}
+	source, err := readFile(path)
+	if err != nil {
+		return err
+	}
+	target, err := trans.Translate(source, "en", "ru")
+	if err != nil {
+		return err
+	}
 
-	//fmt.Printf("From %s to %s", source, target)
-	//tokens := parse.Tokenize(s)
-	//tokens = removeDots(tokens)
-	//tokens = mapSlice(tokens, func(item parse.Token) parse.Token {
-	//	item.Text = strings.ReplaceAll(item.Text, ".", "")
-	//	item.Text = strings.ToLower(item.Text)
-	//	return item
-	//})
-	//for _, t := range tokens {
-	//	fmt.Println(t.Text)
-	//}
+	sourceDir := filepath.Dir(path)
+	sourceName := filepath.Base(path)
+	targetPath := filepath.Join(sourceDir, targetDirName, sourceName)
+	targetBytes := []byte(target)
+	unicodeReplacement := []byte{0xef, 0xbf, 0xbd}
+	targetBytes = bytes.ToValidUTF8(targetBytes, unicodeReplacement)
+
+	err = os.WriteFile(targetPath, targetBytes, os.ModePerm)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 func ensureTargetDirectory(path string) error {
@@ -80,10 +88,11 @@ func mapSlice[T any](s []T, callback func(item T) T) []T {
 	return r
 }
 
-func fixTimeBounds(s string) string {
-	r := regexp.MustCompile(`(\d\d:\d\d:\d\d)(,)?(\d\d\d)`)
+func fixTimeBounds(s []byte) []byte {
+	r := regexp.MustCompile("(\\d\\d:\\d\\d:\\d\\d)(,)?(\\d\\d\\d)")
 	template := "$1,$3"
-	return r.ReplaceAllString(s, template)
+	result := r.ReplaceAllString(string(s), template)
+	return []byte(result)
 }
 
 func pollSourceDirectory() string {

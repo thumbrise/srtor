@@ -14,23 +14,22 @@ func Translate(source, sourceLang, targetLang string) (string, error) {
 	var text []string
 	var result []interface{}
 	encodedSource := url.QueryEscape(source)
-	u := "https://translate.googleapis.com/translate_a/single?client=gtx&sl=" +
-		sourceLang + "&tl=" + targetLang + "&dt=t&q=" + encodedSource
-	fmt.Println(u)
+	u := fmt.Sprintf(
+		"https://translate.googleapis.com/translate_a/single?client=gtx&sl=%s&tl=%s&dt=t&q=%s",
+		sourceLang,
+		targetLang,
+		encodedSource,
+	)
 	r, err := http.Get(u)
 	if err != nil {
 		return "err", errors.New("Error getting translate.googleapis.com")
 	}
+
 	defer r.Body.Close()
 
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		return "err", errors.New("Error reading response body")
-	}
-
-	bReq := strings.Contains(string(body), `<title>Error 400 (Bad Request)`)
-	if bReq {
-		return "err", errors.New("Error 400 (Bad Request)")
 	}
 
 	err = json.Unmarshal(body, &result)
