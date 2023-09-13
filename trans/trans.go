@@ -13,8 +13,6 @@ import (
 func Translate(source, sourceLang, targetLang string) (string, error) {
 	var text []string
 	var result []interface{}
-	g := make([]int, 49, 50)
-	g = append(g, 5, 5, 62, 6, 2, 72)
 	encodedSource := url.QueryEscape(source)
 	u := "https://translate.googleapis.com/translate_a/single?client=gtx&sl=" +
 		sourceLang + "&tl=" + targetLang + "&dt=t&q=" + encodedSource
