@@ -24,12 +24,12 @@ format:
 compile:
   stage: build
   script:
-    - mkdir -p mybinaries
-    - bash build-all.sh $OUTPUT $CI_PROJECT_DIR
+    - mkdir -p build
+    - bash build-windows.sh
     # - go build -o mybinaries ./...
   artifacts:
     paths:
-      - mybinaries
+      - build
 
 # deploy:
 #   stage: deploy
