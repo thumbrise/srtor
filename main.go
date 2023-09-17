@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
-	"subtrans/trans"
+	"subtrans/pkg/trans"
 	"unicode/utf8"
 )
 
