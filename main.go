@@ -9,16 +9,11 @@ import (
 	"regexp"
 	"strings"
 	"subtrans/pkg/trans"
-	"unicode/utf8"
 )
 
 const targetDirName = "subtrans"
 
 func main() {
-	file, _ := os.ReadFile("E:\\go-projects\\subtrans\\testdata\\sources\\subtrans\\01 - Understanding Parallel Computing.srt")
-	if !utf8.Valid(file) {
-		panic("Invalit")
-	}
 	d := pollSourceDirectory()
 
 	ff, err := scanSourceDirectory(d)
