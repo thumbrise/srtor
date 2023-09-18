@@ -4,34 +4,61 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
 	"subtrans/pkg/trans"
+	"subtrans/pkg/util"
 )
 
 const targetDirName = "subtrans"
 
 func main() {
-	d := pollSourceDirectory()
-
-	ff, err := scanSourceDirectory(d)
+	directory, err := pollSourceDirectory()
 	if err != nil {
 		panic(err)
 	}
 
-	err = ensureTargetDirectory(d)
+	files, err := scanSourceDirectory(directory)
 	if err != nil {
 		panic(err)
 	}
 
-	for _, f := range ff {
+	err = ensureTargetDirectory(directory)
+	if err != nil {
+		panic(err)
+	}
+
+	for _, f := range files {
 		err = processFile(f)
 		if err != nil {
 			panic(err)
 		}
 	}
+
+	bye(len(files), directory)
+
+}
+
+func bye(filesCount int, filesDir string) {
+	message := ""
+	if filesCount > 0 {
+		message = "Success"
+	} else {
+		abs, err := filepath.Abs(filesDir)
+		if err != nil {
+			log.Println(err)
+		}
+		message = fmt.Sprintf("No .srt files in %s", abs)
+	}
+
+	result := fmt.Sprintf("%s\n%s", message, "Press ENTER for exit")
+
+	s := bufio.NewScanner(os.Stdin)
+	fmt.Println(result)
+	s.Scan()
 }
 func processFile(path string) error {
 	source, err := readFile(path)
@@ -90,11 +117,29 @@ func fixTimeBounds(s []byte) []byte {
 	return []byte(result)
 }
 
-func pollSourceDirectory() string {
+func pollSourceDirectory() (string, error) {
 	s := bufio.NewScanner(os.Stdin)
+
 	fmt.Println("Type directory absolute path which contains srt files")
+
+	pathFromWd, err := os.Getwd()
+	if err != nil {
+		log.Println(err)
+	}
+	fmt.Printf("Or empty for default (%s)\n", pathFromWd)
+
 	s.Scan()
-	return s.Text()
+	pathFromConsole, err := util.CanonizePath(s.Text())
+	if err != nil {
+		return "", err
+	}
+	result := ""
+	if pathFromConsole != "" {
+		result = pathFromConsole
+	} else {
+		result = pathFromWd
+	}
+	return result, nil
 }
 func scanSourceDirectory(path string) ([]string, error) {
 	result := make([]string, 0)
