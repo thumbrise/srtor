@@ -4,45 +4,72 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"github.com/schollz/progressbar/v3"
 	"log"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
+	"subtrans/pkg/fs"
 	"subtrans/pkg/trans"
 	"subtrans/pkg/util"
+	"sync"
 )
 
 const targetDirName = "subtrans"
 
 func main() {
-	directory, err := pollSourceDirectory()
+	directory, err := askDirectory()
 	if err != nil {
 		panic(err)
 	}
 
-	files, err := scanSourceDirectory(directory)
+	files, err := fs.ScanDir(directory, func(f os.DirEntry) bool {
+		return strings.HasSuffix(f.Name(), ".srt")
+	})
 	if err != nil {
 		panic(err)
 	}
 
-	err = ensureTargetDirectory(directory)
+	err = fs.MkdirOrIgnore(filepath.Join(directory, targetDirName))
 	if err != nil {
 		panic(err)
 	}
 
-	for _, f := range files {
-		err = processFile(f)
+	bar := progressbar.Default(int64(len(files)))
+
+	wg := sync.WaitGroup{}
+	goroutinesCount := 50
+	chunks := util.ChunkSlice(files, len(files)/goroutinesCount)
+
+	for i := range chunks {
+		wg.Add(1)
+		go func(chunk []string, bar *progressbar.ProgressBar) {
+			defer wg.Done()
+			err := processChunk(chunk, bar)
+			if err != nil {
+				log.Println(err)
+			}
+		}(chunks[i], bar)
+	}
+	wg.Wait()
+	bye(len(files), directory)
+}
+func processChunk(chunk []string, bar *progressbar.ProgressBar) error {
+	for _, f := range chunk {
+		f := f
+		err := processFile(f)
 		if err != nil {
-			panic(err)
+			return err
+		}
+		err = bar.Add(1)
+		if err != nil {
+			return err
 		}
 	}
-
-	bye(len(files), directory)
-
+	return nil
 }
-
 func bye(filesCount int, filesDir string) {
+	fmt.Println()
 	message := ""
 	if filesCount > 0 {
 		message = "Success"
@@ -61,11 +88,11 @@ func bye(filesCount int, filesDir string) {
 	s.Scan()
 }
 func processFile(path string) error {
-	source, err := readFile(path)
+	source, err := os.ReadFile(path)
 	if err != nil {
 		return err
 	}
-	target, err := trans.Translate(source, "en", "ru")
+	target, err := trans.Translate(string(source), "en", "ru")
 	if err != nil {
 		return err
 	}
@@ -84,40 +111,8 @@ func processFile(path string) error {
 
 	return nil
 }
-func ensureTargetDirectory(path string) error {
-	dirTarget := filepath.Join(path, targetDirName)
-	if _, err := os.Stat(dirTarget); os.IsNotExist(err) {
-		err = os.Mkdir(dirTarget, os.ModePerm)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-func readFile(path string) (string, error) {
-	b, err := os.ReadFile(path)
-	if err != nil {
-		return "", err
-	}
-	s := string(b)
-	return s, nil
-}
-func mapSlice[T any](s []T, callback func(item T) T) []T {
-	r := append(s)
-	for i, v := range r {
-		r[i] = callback(v)
-	}
-	return r
-}
 
-func fixTimeBounds(s []byte) []byte {
-	r := regexp.MustCompile("(\\d\\d:\\d\\d:\\d\\d)(,)?(\\d\\d\\d)")
-	template := "$1,$3"
-	result := r.ReplaceAllString(string(s), template)
-	return []byte(result)
-}
-
-func pollSourceDirectory() (string, error) {
+func askDirectory() (string, error) {
 	s := bufio.NewScanner(os.Stdin)
 
 	fmt.Println("Type directory absolute path which contains srt files")
@@ -139,20 +134,6 @@ func pollSourceDirectory() (string, error) {
 	} else {
 		result = pathFromWd
 	}
-	return result, nil
-}
-func scanSourceDirectory(path string) ([]string, error) {
-	result := make([]string, 0)
-	d, err := os.ReadDir(path)
-	if err != nil {
-		return result, err
-	}
-	for _, f := range d {
-		name := f.Name()
-		if !strings.HasSuffix(name, ".srt") {
-			continue
-		}
-		result = append(result, filepath.Join(path, name))
-	}
+
 	return result, nil
 }

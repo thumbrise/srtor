@@ -1,6 +1,7 @@
-package parse
+package improvement
 
 import (
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -35,4 +36,10 @@ func Tokenize(s string) []Token {
 		tokensResult = append(tokensResult, t)
 	}
 	return tokensResult
+}
+func FixTimeBounds(s []byte) []byte {
+	r := regexp.MustCompile("(\\d\\d:\\d\\d:\\d\\d)(,)?(\\d\\d\\d)")
+	template := "$1,$3"
+	result := r.ReplaceAllString(string(s), template)
+	return []byte(result)
 }
