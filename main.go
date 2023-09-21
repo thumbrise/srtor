@@ -166,7 +166,7 @@ func askLanguageTarget() string {
 
 func askLanguage(label string, defaultValue string) string {
 	scanner := bufio.NewScanner(os.Stdin)
-
+	fmt.Println("Click https://cloud.google.com/translate/docs/languages for look language domain abbreviation!!")
 	fmt.Printf("Type %s language abbreviation. Empty for default %s\n", label, defaultValue)
 
 	scanner.Scan()
