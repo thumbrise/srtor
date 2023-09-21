@@ -16,12 +16,19 @@ import (
 )
 
 const targetDirName = "subtrans"
+const defaultLanguageSource = "en"
+const defaultLanguageTarget = "ru"
+
+var languageSource, languageTarget string
 
 func main() {
 	directory, err := askDirectory()
 	if err != nil {
 		panic(err)
 	}
+
+	languageSource = askLanguageSource()
+	languageTarget = askLanguageTarget()
 
 	files, err := fs.ScanDir(directory, func(f os.DirEntry) bool {
 		return strings.HasSuffix(f.Name(), ".srt")
@@ -35,12 +42,18 @@ func main() {
 		panic(err)
 	}
 
-	bar := progressbar.Default(int64(len(files)))
+	filesLen := len(files)
+
+	bar := progressbar.Default(int64(filesLen))
+
+	goroutinesCount := 50
+	if goroutinesCount > filesLen {
+		goroutinesCount = filesLen
+	}
+	chunkSize := filesLen / goroutinesCount
+	chunks := util.ChunkSlice(files, chunkSize)
 
 	wg := sync.WaitGroup{}
-	goroutinesCount := 50
-	chunks := util.ChunkSlice(files, len(files)/goroutinesCount)
-
 	for i := range chunks {
 		wg.Add(1)
 		go func(chunk []string, bar *progressbar.ProgressBar) {
@@ -52,8 +65,10 @@ func main() {
 		}(chunks[i], bar)
 	}
 	wg.Wait()
-	bye(len(files), directory)
+
+	bye(filesLen, directory)
 }
+
 func processChunk(chunk []string, bar *progressbar.ProgressBar) error {
 	for _, f := range chunk {
 		f := f
@@ -66,8 +81,10 @@ func processChunk(chunk []string, bar *progressbar.ProgressBar) error {
 			return err
 		}
 	}
+
 	return nil
 }
+
 func bye(filesCount int, filesDir string) {
 	fmt.Println()
 	message := ""
@@ -87,12 +104,13 @@ func bye(filesCount int, filesDir string) {
 	fmt.Println(result)
 	s.Scan()
 }
+
 func processFile(path string) error {
 	source, err := os.ReadFile(path)
 	if err != nil {
 		return err
 	}
-	target, err := trans.Translate(string(source), "en", "ru")
+	target, err := trans.Translate(string(source), languageSource, languageTarget)
 	if err != nil {
 		return err
 	}
@@ -113,7 +131,7 @@ func processFile(path string) error {
 }
 
 func askDirectory() (string, error) {
-	s := bufio.NewScanner(os.Stdin)
+	scanner := bufio.NewScanner(os.Stdin)
 
 	fmt.Println("Type directory absolute path which contains srt files")
 
@@ -121,10 +139,10 @@ func askDirectory() (string, error) {
 	if err != nil {
 		log.Println(err)
 	}
-	fmt.Printf("Or empty for default (%s)\n", pathFromWd)
+	fmt.Printf("Or empty for default %s\n", pathFromWd)
 
-	s.Scan()
-	pathFromConsole, err := util.CanonizePath(s.Text())
+	scanner.Scan()
+	pathFromConsole, err := util.CanonizePath(scanner.Text())
 	if err != nil {
 		return "", err
 	}
@@ -136,4 +154,26 @@ func askDirectory() (string, error) {
 	}
 
 	return result, nil
+}
+
+func askLanguageSource() string {
+	return askLanguage("source", defaultLanguageSource)
+}
+
+func askLanguageTarget() string {
+	return askLanguage("target", defaultLanguageTarget)
+}
+
+func askLanguage(label string, defaultValue string) string {
+	scanner := bufio.NewScanner(os.Stdin)
+
+	fmt.Printf("Type %s language abbreviation. Empty for default %s\n", label, defaultValue)
+
+	scanner.Scan()
+	result := scanner.Text()
+	if result == "" {
+		result = defaultValue
+	}
+
+	return result
 }
