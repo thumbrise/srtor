@@ -7,7 +7,20 @@ on:
     branches: [ "master" ]
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
 
+    - name: set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.19'
+
+    - run: go fmt $(go list ./... | grep -v /vendor/)
+    - run: go vet $(go list ./... | grep -v /vendor/)
+    - run: go test -race $(go list ./... | grep -v /vendor/)
+    
   build:
     runs-on: ubuntu-latest
     steps:
@@ -18,11 +31,8 @@ jobs:
       with:
         go-version: '1.19'
 
-    - name: make build dir
-      run: mkdir -p build
-
-    - name: run build shell file
-      run: bash build-windows.sh
+    - run: mkdir -p build
+    - run: bash build-windows.sh
 
     - name: upload
       uses: actions/upload-artifact@v3
