@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"srtor/pkg/util"
+	"strings"
 )
 
 const languagesLink = "https://cloud.google.com/translate/docs/languages"
@@ -35,6 +36,7 @@ func AskLanguage(label string, defaultValue string) string {
 
 	return result
 }
+
 func AskDirectory() (string, error) {
 	scanner := bufio.NewScanner(os.Stdin)
 
@@ -78,4 +80,26 @@ func Bye(filesCount int, filesDir string) {
 	s := bufio.NewScanner(os.Stdin)
 	fmt.Println(result)
 	s.Scan()
+}
+
+func AskRecursive() bool {
+	return askBool("Recursive processing Y/n (n)")
+}
+
+func AskArchive() bool {
+	return askBool("Archive original subtitles Y/n (n)")
+}
+
+func AskReplace() bool {
+	return askBool("Replace original subtitles by translated Y/n (n)")
+}
+
+func askBool(message string) bool {
+	scanner := bufio.NewScanner(os.Stdin)
+	fmt.Println(message)
+
+	scanner.Scan()
+	t := scanner.Text()
+
+	return strings.ToLower(t) == "y"
 }
