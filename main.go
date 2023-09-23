@@ -8,6 +8,7 @@ import (
 )
 
 const targetDirName = "srtor"
+const translatableExtension = "srt"
 
 func main() {
 	directory, err := interaction.AskDirectory()
@@ -15,7 +16,7 @@ func main() {
 		panic(err)
 	}
 
-	files, err := fs.ScanDirByExtension(directory, "srt")
+	files, err := fs.ScanDirByExtension(directory, translatableExtension)
 	if err != nil {
 		panic(err)
 	}
