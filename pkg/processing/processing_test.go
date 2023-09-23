@@ -28,7 +28,7 @@ func TestProcessor_Process(t *testing.T) {
 			if err != nil {
 				t.Error(err)
 			}
-			pathExpected = filepath.Join(pathActual, name)
+			pathExpected = filepath.Join(pathExpected, name)
 
 			hashActual := hash(pathActual)
 			hashExpected := hash(pathExpected)
