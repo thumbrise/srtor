@@ -12,6 +12,8 @@ import (
 )
 
 func TestProcessor_Process(t *testing.T) {
+	removeTempDir()
+
 	names := []string{"0.srt", "1.srt"}
 
 	process()
@@ -38,6 +40,19 @@ func TestProcessor_Process(t *testing.T) {
 			}
 		})
 	}
+
+	removeTempDir()
+}
+
+func removeTempDir() {
+	directory, err := filepath.Abs("./testdata/sources/srtor")
+	if err != nil {
+		panic(err)
+	}
+	err = os.RemoveAll(directory)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 func process() {
 	directory, err := filepath.Abs("./testdata/sources")
@@ -45,7 +60,7 @@ func process() {
 		panic(err)
 	}
 
-	files, err := fs.ScanDirByExtension(directory, "ext")
+	files, err := fs.ScanDirByExtension(directory, "srt")
 	if err != nil {
 		panic(err)
 	}
