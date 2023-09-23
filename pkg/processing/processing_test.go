@@ -33,10 +33,17 @@ func TestProcessor_Process(t *testing.T) {
 			pathExpected = filepath.Join(pathExpected, name)
 
 			hashActual := hash(pathActual)
+			if hashActual == "" {
+				t.Errorf("hashActual is empty")
+			}
+
 			hashExpected := hash(pathExpected)
+			if hashExpected == "" {
+				t.Errorf("hashExpected is empty")
+			}
 
 			if hashExpected != hashActual {
-				t.Errorf("Hashes not equals")
+				t.Errorf("Hashes not equals\n-------\nEXPECTED\n%s\n------\nACTUAL\n%s\n", hashExpected, hashActual)
 			}
 		})
 	}
