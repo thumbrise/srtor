@@ -104,13 +104,14 @@ func (p *Processor) processFile(path string) error {
 		panic(err)
 	}
 
-	targetPath := filepath.Join(p.targetDirName, sourceName)
+	targetPath := filepath.Join(destination, sourceName)
 	targetBytes := []byte(target)
 
 	targetBytes = bytes.ToValidUTF8(targetBytes, unicodeReplacement)
 
 	err = os.WriteFile(targetPath, targetBytes, os.ModePerm)
 	if err != nil {
+		log.Fatal(targetPath)
 		return err
 	}
 
