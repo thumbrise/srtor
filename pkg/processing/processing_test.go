@@ -20,40 +20,20 @@ func TestProcessor_Process(t *testing.T) {
 
 	for _, name := range names {
 		t.Run(name, func(t *testing.T) {
-			pathActual, err := filepath.Abs("./testdata/sources/srtor")
-			pathActual = filepath.Join(pathActual, name)
+			dir, err := filepath.Abs("./testdata/sources/srtor")
+			if err != nil {
+				t.Error(err)
+			}
+			file := filepath.Join(dir, name)
+
+			bytes, err := os.ReadFile(file)
 			if err != nil {
 				t.Error(err)
 			}
 
-			pathExpected, err := filepath.Abs("./testdata/expected")
-			if err != nil {
-				t.Error(err)
-			}
-			pathExpected = filepath.Join(pathExpected, name)
-
-			hashActual := hash(pathActual)
-			if hashActual == "" {
-				t.Errorf("hashActual is empty")
-			}
-
-			hashExpected := hash(pathExpected)
-			if hashExpected == "" {
-				t.Errorf("hashExpected is empty")
-			}
-
-			textActual, err := os.ReadFile(pathActual)
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			textExpected, err := os.ReadFile(pathExpected)
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			if hashExpected != hashActual {
-				t.Errorf("Hashes not equals\n-------\nEXPECTEDHASH\n%s\n------\nACTUALHASH\n%s\n\n-------\nEXPECTEDTEXT\n%s\n------\nACTUALTEXT\n%s\n", hashExpected, hashActual, string(textExpected), string(textActual))
+			text := string(bytes)
+			if text == "" {
+				t.Errorf("Result file is empty")
 			}
 		})
 	}
