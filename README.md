@@ -11,7 +11,7 @@ Translator of subtitles in srt format.
 - Completely free
 
 ## Installation
-- Download [release](https://github.com/thumbrise/srtor/releases/tag/1.2.0-langdocs)
+- [Download](https://github.com/thumbrise/srtor/releases)
 - Select your OS and architecture
 - Put it anywhere (Better in a directory with subtitles, so as not to specify the path)
 
