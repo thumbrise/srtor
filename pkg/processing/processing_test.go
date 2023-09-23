@@ -42,8 +42,18 @@ func TestProcessor_Process(t *testing.T) {
 				t.Errorf("hashExpected is empty")
 			}
 
+			textActual, err := os.ReadFile(pathActual)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			textExpected, err := os.ReadFile(pathExpected)
+			if err != nil {
+				log.Fatal(err)
+			}
+
 			if hashExpected != hashActual {
-				t.Errorf("Hashes not equals\n-------\nEXPECTED\n%s\n------\nACTUAL\n%s\n", hashExpected, hashActual)
+				t.Errorf("Hashes not equals\n-------\nEXPECTEDHASH\n%s\n------\nACTUALHASH\n%s\n\n-------\nEXPECTEDTEXT\n%s\n------\nACTUALTEXT\n%s\n", hashExpected, hashActual, string(textExpected), string(textActual))
 			}
 		})
 	}
