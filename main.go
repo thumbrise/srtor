@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"srtor/pkg/fs"
 	"srtor/pkg/interaction"
 	"srtor/pkg/processing"
@@ -10,6 +11,8 @@ const resultDirName = "srtor"
 const translatableExtension = "srt"
 
 func main() {
+	configureLogger()
+
 	directory, err := interaction.AskDirectory()
 	if err != nil {
 		panic(err)
@@ -37,4 +40,8 @@ func main() {
 		Process(files)
 
 	interaction.Bye(len(files), directory)
+}
+
+func configureLogger() {
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
 }
