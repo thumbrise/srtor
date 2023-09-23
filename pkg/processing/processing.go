@@ -76,6 +76,7 @@ func (p *Processor) iteratePaths(paths []string, bar *progressbar.ProgressBar) e
 		if err != nil {
 			return err
 		}
+
 		err = bar.Add(1)
 		if err != nil {
 			return err
@@ -90,28 +91,30 @@ func (p *Processor) processFile(path string) error {
 	if err != nil {
 		return err
 	}
+
 	target, err := transl.Translate(string(source), p.langSource, p.langTarget)
 	if err != nil {
+		log.Println(err)
 		return err
 	}
 
 	sourceName := filepath.Base(path)
 	sourceDir := filepath.Dir(path)
-
 	destination := filepath.Join(sourceDir, p.targetDirName)
+
 	err = fs.MkdirOrIgnore(destination)
 	if err != nil {
-		panic(err)
+		log.Println(err)
+		return err
 	}
 
 	targetPath := filepath.Join(destination, sourceName)
 	targetBytes := []byte(target)
-
 	targetBytes = bytes.ToValidUTF8(targetBytes, unicodeReplacement)
 
 	err = os.WriteFile(targetPath, targetBytes, os.ModePerm)
 	if err != nil {
-		log.Fatal(targetPath)
+		log.Println(err)
 		return err
 	}
 

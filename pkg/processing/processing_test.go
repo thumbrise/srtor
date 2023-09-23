@@ -1,9 +1,6 @@
 package processing
 
 import (
-	"crypto/sha256"
-	"fmt"
-	"io"
 	"log"
 	"os"
 	"path/filepath"
@@ -28,7 +25,7 @@ func TestProcessor_Process(t *testing.T) {
 
 			bytes, err := os.ReadFile(file)
 			if err != nil {
-				t.Error(err)
+				t.Errorf("Readeng file error\n%v", err)
 			}
 
 			text := string(bytes)
@@ -54,36 +51,16 @@ func removeTempDir() {
 func process() {
 	directory, err := filepath.Abs("./testdata")
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	files, err := fs.ScanDirByExtension(directory, "srt", false)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	targetDirName := "srtor"
-	destination := filepath.Join(directory, targetDirName)
-	err = fs.MkdirOrIgnore(destination)
-	if err != nil {
-		panic(err)
-	}
 
-	processor := NewProcessor("en", "ru", destination)
+	processor := NewProcessor("en", "ru", targetDirName)
 	processor.Process(files)
-}
-
-func hash(path string) string {
-	f, err := os.Open(path)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer f.Close()
-
-	h := sha256.New()
-	if _, err := io.Copy(h, f); err != nil {
-		log.Fatal(err)
-	}
-
-	return fmt.Sprintf("%x", h.Sum(nil))
 }

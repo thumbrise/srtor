@@ -1,6 +1,7 @@
 package fs
 
 import (
+	"io/fs"
 	"log"
 	"os"
 	"path/filepath"
@@ -28,15 +29,30 @@ func ScanDirByExtension(path string, ext string, recursive bool) ([]string, erro
 	return entries, nil
 }
 func scanDir(path string, recursive bool) ([]string, error) {
-	result := make([]string, 0)
+	var result []string
 
-	d, err := os.ReadDir(path)
-	if err != nil {
-		return result, err
-	}
+	if recursive {
+		err := filepath.Walk(path, func(path string, info fs.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
 
-	for _, f := range d {
-		result = append(result, filepath.Join(path, f.Name()))
+			result = append(result, path)
+
+			return nil
+		})
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		d, err := os.ReadDir(path)
+		if err != nil {
+			return result, err
+		}
+
+		for _, f := range d {
+			result = append(result, filepath.Join(path, f.Name()))
+		}
 	}
 
 	return result, nil
