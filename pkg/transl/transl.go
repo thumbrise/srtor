@@ -1,4 +1,4 @@
-package trans
+package transl
 
 import (
 	"encoding/json"

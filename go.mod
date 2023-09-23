@@ -1,4 +1,4 @@
-module subtrans
+module srtor
 
 go 1.19
 
