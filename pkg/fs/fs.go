@@ -3,6 +3,7 @@ package fs
 import (
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 func MkdirOrIgnore(dirTarget string) error {
@@ -12,9 +13,18 @@ func MkdirOrIgnore(dirTarget string) error {
 			return err
 		}
 	}
+
 	return nil
 }
-func ScanDir(path string, filter func(f os.DirEntry) bool) ([]string, error) {
+func ScanDirByExtension(path string, ext string) ([]string, error) {
+	return scanDirWithFilter(path, func(f os.DirEntry) bool {
+		extFixed := strings.TrimLeft(ext, ".")
+		extFixed = "." + extFixed
+
+		return strings.HasSuffix(f.Name(), extFixed)
+	})
+}
+func scanDirWithFilter(path string, filter func(f os.DirEntry) bool) ([]string, error) {
 	result := make([]string, 0)
 	d, err := os.ReadDir(path)
 	if err != nil {
@@ -26,5 +36,6 @@ func ScanDir(path string, filter func(f os.DirEntry) bool) ([]string, error) {
 			result = append(result, filepath.Join(path, f.Name()))
 		}
 	}
+
 	return result, nil
 }

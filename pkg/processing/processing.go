@@ -12,25 +12,27 @@ import (
 	"sync"
 )
 
+var unicodeReplacement = []byte{0xef, 0xbf, 0xbd}
+
 type Processor struct {
-	LangSource    string
-	LangTarget    string
-	NumGoroutines int
-	TargetDirName string
+	langSource    string
+	langTarget    string
+	numThreads    int
+	targetDirName string
 }
 
-func NewProcessor() Processor {
+func NewProcessor(langSource string, langTarget string, destination string) Processor {
 	return Processor{
-		LangSource:    "en",
-		LangTarget:    "ru",
-		NumGoroutines: runtime.NumCPU(),
-		TargetDirName: "srtor",
+		langSource:    langSource,
+		langTarget:    langTarget,
+		numThreads:    runtime.NumCPU(),
+		targetDirName: destination,
 	}
 }
 func (p *Processor) Process(files []string) {
 	filesLen := len(files)
 	bar := progressbar.Default(int64(filesLen))
-	numGoroutines := util.Max(p.NumGoroutines, 0)
+	numGoroutines := util.Max(p.numThreads, 0)
 	numGoroutines = util.Min(numGoroutines, filesLen)
 	chunkSize := filesLen / numGoroutines
 	chunks := util.ChunkSlice(files, chunkSize)
@@ -69,16 +71,15 @@ func (p *Processor) processFile(path string) error {
 	if err != nil {
 		return err
 	}
-	target, err := transl.Translate(string(source), p.LangSource, p.LangTarget)
+	target, err := transl.Translate(string(source), p.langSource, p.langTarget)
 	if err != nil {
 		return err
 	}
 
-	sourceDir := filepath.Dir(path)
 	sourceName := filepath.Base(path)
-	targetPath := filepath.Join(sourceDir, p.TargetDirName, sourceName)
+	targetPath := filepath.Join(p.targetDirName, sourceName)
 	targetBytes := []byte(target)
-	unicodeReplacement := []byte{0xef, 0xbf, 0xbd}
+
 	targetBytes = bytes.ToValidUTF8(targetBytes, unicodeReplacement)
 
 	err = os.WriteFile(targetPath, targetBytes, os.ModePerm)
