@@ -1,5 +1,7 @@
 package util
 
+import "errors"
+
 func MapSlice[T any](slice []T, callback func(item T) T) []T {
 	r := append(slice)
 	for i, v := range r {
@@ -8,8 +10,13 @@ func MapSlice[T any](slice []T, callback func(item T) T) []T {
 	return r
 }
 
-func ChunkSlice[T any](slice []T, chunkSize int) [][]T {
+func ChunkSlice[T any](slice []T, chunkSize int) ([][]T, error) {
 	var chunks [][]T
+
+	if len(slice) == 0 {
+		return chunks, errors.New("empty slice passed")
+	}
+
 	for {
 		if len(slice) == 0 {
 			break
@@ -25,5 +32,5 @@ func ChunkSlice[T any](slice []T, chunkSize int) [][]T {
 		slice = slice[chunkSize:]
 	}
 
-	return chunks
+	return chunks, nil
 }
