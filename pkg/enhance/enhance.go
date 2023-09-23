@@ -1,4 +1,4 @@
-package improvement
+package enhance
 
 import (
 	"regexp"
