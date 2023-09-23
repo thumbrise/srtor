@@ -35,7 +35,10 @@ func (p *Processor) Process(files []string) {
 	numGoroutines := util.Max(p.numThreads, 0)
 	numGoroutines = util.Min(numGoroutines, filesLen)
 	chunkSize := filesLen / numGoroutines
-	chunks := util.ChunkSlice(files, chunkSize)
+	chunks, err := util.ChunkSlice(files, chunkSize)
+	if err != nil {
+		log.Println(err)
+	}
 
 	wg := sync.WaitGroup{}
 	for i := range chunks {
