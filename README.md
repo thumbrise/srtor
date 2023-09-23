@@ -4,13 +4,12 @@
 
 Translator of subtitles in srt format.
 
+- No limits
 - No dependencies
 - No installation (portable)
-- Translates quickly
-- Records quickly
-- Completely free
+- Quick translate
 
-## Installation
+## How to get
 - [Download](https://github.com/thumbrise/srtor/releases)
 - Select your OS and architecture
 - Put it anywhere (Better in a directory with subtitles, so as not to specify the path)
@@ -18,6 +17,5 @@ Translator of subtitles in srt format.
 ## Usage
 - Launch the application
 - Specify the path or use the current directory (where the application is located)
-- Select original language
-- Select the language you want to translate into
+- Select original and target [languages](https://cloud.google.com/translate/docs/languages)
 - Translated files will appear in the **srtor** directory
