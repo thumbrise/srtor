@@ -1,13 +1,12 @@
 package main
 
 import (
-	"path/filepath"
 	"srtor/pkg/fs"
 	"srtor/pkg/interaction"
 	"srtor/pkg/processing"
 )
 
-const targetDirName = "srtor"
+const resultDirName = "srtor"
 const translatableExtension = "srt"
 
 func main() {
@@ -16,22 +15,26 @@ func main() {
 		panic(err)
 	}
 
-	files, err := fs.ScanDirByExtension(directory, translatableExtension)
-	if err != nil {
-		panic(err)
-	}
-
-	destination := filepath.Join(directory, targetDirName)
-	err = fs.MkdirOrIgnore(destination)
-	if err != nil {
-		panic(err)
-	}
-
 	languageSource := interaction.AskLanguageSource()
 	languageTarget := interaction.AskLanguageTarget()
 
-	processor := processing.NewProcessor(languageSource, languageTarget, destination)
-	processor.Process(files)
+	needRecursive := interaction.AskRecursive()
+	files, err := fs.ScanDirByExtension(directory, translatableExtension, needRecursive)
+	if err != nil {
+		panic(err)
+	}
+
+	needReplace := interaction.AskReplace()
+	needArchive := false
+	if needReplace {
+		needArchive = interaction.AskArchive()
+	}
+
+	processing.
+		NewProcessor(languageSource, languageTarget, resultDirName).
+		WithReplace(needReplace).
+		WithArchive(needArchive).
+		Process(files)
 
 	interaction.Bye(len(files), directory)
 }

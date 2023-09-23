@@ -20,7 +20,7 @@ func TestProcessor_Process(t *testing.T) {
 
 	for _, name := range names {
 		t.Run(name, func(t *testing.T) {
-			dir, err := filepath.Abs("./testdata/sources/srtor")
+			dir, err := filepath.Abs("./testdata/srtor")
 			if err != nil {
 				t.Error(err)
 			}
@@ -42,7 +42,7 @@ func TestProcessor_Process(t *testing.T) {
 }
 
 func removeTempDir() {
-	directory, err := filepath.Abs("./testdata/sources/srtor")
+	directory, err := filepath.Abs("./testdata/srtor")
 	if err != nil {
 		panic(err)
 	}
@@ -52,12 +52,12 @@ func removeTempDir() {
 	}
 }
 func process() {
-	directory, err := filepath.Abs("./testdata/sources")
+	directory, err := filepath.Abs("./testdata")
 	if err != nil {
 		panic(err)
 	}
 
-	files, err := fs.ScanDirByExtension(directory, "srt")
+	files, err := fs.ScanDirByExtension(directory, "srt", false)
 	if err != nil {
 		panic(err)
 	}

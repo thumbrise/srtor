@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"srtor/pkg/fs"
 	"srtor/pkg/transl"
 	"srtor/pkg/util"
 	"sync"
@@ -19,15 +20,25 @@ type Processor struct {
 	langTarget    string
 	numThreads    int
 	targetDirName string
+	needReplace   bool
+	needArchive   bool
 }
 
-func NewProcessor(langSource string, langTarget string, destination string) Processor {
-	return Processor{
+func NewProcessor(langSource string, langTarget string, destination string) *Processor {
+	return &Processor{
 		langSource:    langSource,
 		langTarget:    langTarget,
 		numThreads:    runtime.NumCPU(),
 		targetDirName: destination,
 	}
+}
+func (p *Processor) WithReplace(v bool) *Processor {
+	p.needReplace = v
+	return p
+}
+func (p *Processor) WithArchive(v bool) *Processor {
+	p.needArchive = v
+	return p
 }
 func (p *Processor) Process(files []string) {
 	filesLen := len(files)
@@ -85,6 +96,14 @@ func (p *Processor) processFile(path string) error {
 	}
 
 	sourceName := filepath.Base(path)
+	sourceDir := filepath.Dir(path)
+
+	destination := filepath.Join(sourceDir, p.targetDirName)
+	err = fs.MkdirOrIgnore(destination)
+	if err != nil {
+		panic(err)
+	}
+
 	targetPath := filepath.Join(p.targetDirName, sourceName)
 	targetBytes := []byte(target)
 

@@ -16,7 +16,7 @@ func MkdirOrIgnore(dirTarget string) error {
 
 	return nil
 }
-func ScanDirByExtension(path string, ext string) ([]string, error) {
+func ScanDirByExtension(path string, ext string, recursive bool) ([]string, error) {
 	return scanDirWithFilter(path, func(f os.DirEntry) bool {
 		return strings.HasSuffix(f.Name(), ext)
 	})

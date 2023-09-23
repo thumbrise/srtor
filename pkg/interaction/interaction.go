@@ -14,6 +14,9 @@ const languagesLink = "https://cloud.google.com/translate/docs/languages"
 const defaultLanguageSource = "en"
 const defaultLanguageTarget = "ru"
 
+func printInput() {
+	fmt.Print("->  ")
+}
 func AskLanguageSource() string {
 	return AskLanguage("source", defaultLanguageSource)
 }
@@ -27,6 +30,7 @@ func AskLanguage(label string, defaultValue string) string {
 
 	fmt.Printf("Click %s for look language domain abbreviation!!\n", languagesLink)
 	fmt.Printf("Type %s language abbreviation. Empty for default %s\n", label, defaultValue)
+	printInput()
 
 	scanner.Scan()
 	result := scanner.Text()
@@ -47,6 +51,7 @@ func AskDirectory() (string, error) {
 		log.Println(err)
 	}
 	fmt.Printf("Or empty for default %s\n", pathFromWd)
+	printInput()
 
 	scanner.Scan()
 	pathFromConsole, err := util.CanonizePath(scanner.Text())
@@ -97,6 +102,7 @@ func AskReplace() bool {
 func askBool(message string) bool {
 	scanner := bufio.NewScanner(os.Stdin)
 	fmt.Println(message)
+	printInput()
 
 	scanner.Scan()
 	t := scanner.Text()
