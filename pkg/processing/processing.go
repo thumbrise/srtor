@@ -28,14 +28,17 @@ func NewProcessor(langSource string, langTarget string, resultDirName string) *P
 		resultDirName: resultDirName,
 	}
 }
+
 func (p *Processor) WithReplace(v bool) *Processor {
 	p.needReplace = v
 	return p
 }
+
 func (p *Processor) WithArchive(v bool) *Processor {
 	p.needArchive = v
 	return p
 }
+
 func (p *Processor) Process(files []string) {
 	filesLen := len(files)
 
@@ -49,31 +52,48 @@ func (p *Processor) Process(files []string) {
 		log.Println(err)
 	}
 
+	p.threadChunks(chunks, func() error {
+		err = bar.Add(1)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+}
+
+func (p *Processor) threadChunks(chunks [][]string, onFileProcessed func() error) {
 	wg := sync.WaitGroup{}
+
 	for i := range chunks {
+
 		wg.Add(1)
-		go func(paths []string, bar *progressbar.ProgressBar) {
+
+		chunk := chunks[i]
+		go func(paths []string) {
 			defer wg.Done()
-			err := p.iteratePaths(paths, bar)
+			err := p.processReal(paths, onFileProcessed)
 			if err != nil {
 				log.Println(err)
 			}
-		}(chunks[i], bar)
+		}(chunk)
 	}
+
 	wg.Wait()
 }
+
 func newProgressBar(length int) *progressbar.ProgressBar {
 	return progressbar.Default(int64(length))
 }
 
-func (p *Processor) iteratePaths(paths []string, bar *progressbar.ProgressBar) error {
+func (p *Processor) processReal(paths []string, onEach func() error) error {
 	for _, path := range paths {
 		err := p.processFile(path)
 		if err != nil {
 			return err
 		}
 
-		err = bar.Add(1)
+		err = onEach()
 		if err != nil {
 			return err
 		}
