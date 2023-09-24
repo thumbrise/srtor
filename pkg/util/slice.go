@@ -1,36 +1,62 @@
 package util
 
-import "errors"
+import (
+	"errors"
+)
 
 func MapSlice[T any](slice []T, callback func(item T) T) []T {
 	r := append(slice)
 	for i, v := range r {
 		r[i] = callback(v)
 	}
+
 	return r
 }
 
-func ChunkSlice[T any](slice []T, chunkSize int) ([][]T, error) {
-	var chunks [][]T
+func SplitSlice[T any](slice []T, chunks int) ([][]T, error) {
+	chunkSize := calculateChunkSize(len(slice), chunks)
+	r, err := chunkSliceBySize(slice, chunkSize)
 
-	if len(slice) == 0 {
-		return chunks, errors.New("empty slice passed")
+	return r, err
+}
+
+func calculateChunkSize(total, divider int) int {
+	// prevent negative divider
+	dividerReal := Abs(divider)
+	// prevent total < divider
+	dividerReal = Min(dividerReal, total)
+	// prevent zero division
+	if dividerReal == 0 {
+		return total
+	}
+
+	return total / dividerReal
+}
+
+func chunkSliceBySize[T any](v []T, size int) ([][]T, error) {
+	result := make([][]T, 0)
+
+	if len(v) == 0 {
+		return result, errors.New("empty v passed")
+	}
+
+	if size == 0 {
+		return result, errors.New("empty size passed")
 	}
 
 	for {
-		if len(slice) == 0 {
+		if len(v) == 0 {
 			break
 		}
 
-		// necessary check to avoid slicing beyond
-		// slice capacity
-		if len(slice) < chunkSize {
-			chunkSize = len(slice)
+		// prevent slicing beyond
+		if len(v) < size {
+			size = len(v)
 		}
 
-		chunks = append(chunks, slice[0:chunkSize])
-		slice = slice[chunkSize:]
+		result = append(result, v[0:size])
+		v = v[size:]
 	}
 
-	return chunks, nil
+	return result, nil
 }

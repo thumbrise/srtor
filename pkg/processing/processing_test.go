@@ -4,7 +4,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"srtor/pkg/fs"
+	"srtor/pkg/fsutil"
 	"testing"
 )
 
@@ -54,7 +54,7 @@ func process() {
 		log.Fatal(err)
 	}
 
-	files, err := fs.ScanDirByExtension(directory, "srt", false)
+	files, err := fsutil.ScanDirByExtension(directory, "srt", false)
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -2,7 +2,7 @@ package main
 
 import (
 	"log"
-	"srtor/pkg/fs"
+	"srtor/pkg/fsutil"
 	"srtor/pkg/interaction"
 	"srtor/pkg/processing"
 )
@@ -22,7 +22,7 @@ func main() {
 	languageTarget := interaction.AskLanguageTarget()
 
 	needRecursive := interaction.AskRecursive()
-	files, err := fs.ScanDirByExtension(directory, translatableExtension, needRecursive)
+	files, err := fsutil.ScanDirByExtension(directory, translatableExtension, needRecursive)
 	if err != nil {
 		log.Fatal(err)
 	}

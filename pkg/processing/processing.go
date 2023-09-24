@@ -1,19 +1,16 @@
 package processing
 
 import (
-	"bytes"
 	"github.com/schollz/progressbar/v3"
 	"log"
 	"os"
 	"path/filepath"
 	"runtime"
-	"srtor/pkg/fs"
+	"srtor/pkg/fsutil"
 	"srtor/pkg/transl"
 	"srtor/pkg/util"
 	"sync"
 )
-
-var unicodeReplacement = []byte{0xef, 0xbf, 0xbd}
 
 type Processor struct {
 	langSource    string
@@ -47,11 +44,8 @@ func (p *Processor) Process(files []string) {
 		return
 	}
 
-	bar := progressbar.Default(int64(filesLen))
-	numGoroutines := util.Max(p.numThreads, 0)
-	numGoroutines = util.Min(numGoroutines, filesLen)
-	chunkSize := filesLen / numGoroutines
-	chunks, err := util.ChunkSlice(files, chunkSize)
+	bar := newProgressBar(filesLen)
+	chunks, err := util.SplitSlice(files, p.numThreads)
 	if err != nil {
 		log.Println(err)
 	}
@@ -68,6 +62,9 @@ func (p *Processor) Process(files []string) {
 		}(chunks[i], bar)
 	}
 	wg.Wait()
+}
+func newProgressBar(length int) *progressbar.ProgressBar {
+	return progressbar.Default(int64(length))
 }
 
 func (p *Processor) iteratePaths(paths []string, bar *progressbar.ProgressBar) error {
@@ -92,7 +89,7 @@ func (p *Processor) processFile(path string) error {
 		return err
 	}
 
-	target, err := transl.Translate(string(source), p.langSource, p.langTarget)
+	translated, err := transl.Translate(string(source), p.langSource, p.langTarget)
 	if err != nil {
 		log.Println(err)
 		return err
@@ -102,17 +99,16 @@ func (p *Processor) processFile(path string) error {
 	sourceDir := filepath.Dir(path)
 	destination := filepath.Join(sourceDir, p.targetDirName)
 
-	err = fs.MkdirOrIgnore(destination)
+	err = fsutil.MkdirOrIgnore(destination)
 	if err != nil {
 		log.Println(err)
 		return err
 	}
 
-	targetPath := filepath.Join(destination, sourceName)
-	targetBytes := []byte(target)
-	targetBytes = bytes.ToValidUTF8(targetBytes, unicodeReplacement)
+	resultPath := filepath.Join(destination, sourceName)
+	resultBytes := util.FixUTF8(translated)
 
-	err = os.WriteFile(targetPath, targetBytes, os.ModePerm)
+	err = os.WriteFile(resultPath, resultBytes, os.ModePerm)
 	if err != nil {
 		log.Println(err)
 		return err
