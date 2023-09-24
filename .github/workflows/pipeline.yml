@@ -19,7 +19,7 @@ jobs:
 
     - run: go fmt $(go list ./... | grep -v /vendor/)
     - run: go vet $(go list ./... | grep -v /vendor/)
-    - run: go test -race $(go list ./... | grep -v /vendor/)
+    - run: TRANSLATE_DEBUG=1 go test -race $(go list ./... | grep -v /vendor/)
     
   build:
     runs-on: self-hosted
