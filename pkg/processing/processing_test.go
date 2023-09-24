@@ -19,7 +19,7 @@ func TestProcessor_Process(t *testing.T) {
 
 	for _, name := range names {
 		t.Run(name, func(t *testing.T) {
-			dir, err := filepath.Abs("./testdata/srtor")
+			dir, err := filepath.Abs(filepath.Join("./testdata", resultDirName))
 			if err != nil {
 				t.Error(err)
 			}
@@ -41,7 +41,7 @@ func TestProcessor_Process(t *testing.T) {
 }
 
 func removeTempDir() {
-	directory, err := filepath.Abs("./testdata/srtor")
+	directory, err := filepath.Abs(filepath.Join("./testdata", resultDirName))
 	if err != nil {
 		log.Fatal(err)
 	}
