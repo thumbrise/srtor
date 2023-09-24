@@ -107,3 +107,53 @@ func TestCalculateChunkSize(t *testing.T) {
 		})
 	}
 }
+func TestSplitSlice(t *testing.T) {
+	testCases := []struct {
+		name     string
+		slice    []int
+		chunks   int
+		expected [][]int
+		errMsg   string
+	}{
+		{
+			name:     "Splitting a slice",
+			slice:    []int{1, 2, 3, 4, 5, 6, 7, 8, 9},
+			chunks:   3,
+			expected: [][]int{{1, 2, 3}, {4, 5, 6}, {7, 8, 9}},
+			errMsg:   "",
+		},
+		{
+			name:     "Splitting a slice with odd number",
+			slice:    []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
+			chunks:   3,
+			expected: [][]int{{1, 2, 3}, {4, 5, 6}, {7, 8, 9}, {10}},
+			errMsg:   "",
+		},
+		{
+			name:     "Splitting an empty slice",
+			slice:    []int{},
+			chunks:   5,
+			expected: [][]int{},
+			errMsg:   "empty v passed",
+		},
+		{
+			name:     "Splitting with zero chunks",
+			slice:    []int{1, 2, 3, 4, 5},
+			chunks:   0,
+			expected: [][]int{{1, 2, 3, 4, 5}},
+			errMsg:   "empty size passed",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			result, err := SplitSlice(tc.slice, tc.chunks)
+			if err != nil && err.Error() != tc.errMsg {
+				t.Errorf("Unexpected error. Expected: %v, Got: %v", tc.errMsg, err)
+			}
+			if !reflect.DeepEqual(result, tc.expected) {
+				t.Errorf("Unexpected result. Expected: %v, Got: %v", tc.expected, result)
+			}
+		})
+	}
+}
