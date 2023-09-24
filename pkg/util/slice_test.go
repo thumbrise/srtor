@@ -1,6 +1,7 @@
 package util
 
 import (
+	"errors"
 	"reflect"
 	"testing"
 )
@@ -113,43 +114,41 @@ func TestSplitSlice(t *testing.T) {
 		slice    []int
 		chunks   int
 		expected [][]int
-		errMsg   string
+		err      error
 	}{
 		{
 			name:     "Splitting a slice",
 			slice:    []int{1, 2, 3, 4, 5, 6, 7, 8, 9},
 			chunks:   3,
 			expected: [][]int{{1, 2, 3}, {4, 5, 6}, {7, 8, 9}},
-			errMsg:   "",
 		},
 		{
 			name:     "Splitting a slice with odd number",
 			slice:    []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
 			chunks:   3,
 			expected: [][]int{{1, 2, 3}, {4, 5, 6}, {7, 8, 9}, {10}},
-			errMsg:   "",
 		},
 		{
 			name:     "Splitting an empty slice",
 			slice:    []int{},
 			chunks:   5,
 			expected: [][]int{},
-			errMsg:   "empty v passed",
+			err:      ErrEmptyValuePassed,
 		},
 		{
 			name:     "Splitting with zero chunks",
 			slice:    []int{1, 2, 3, 4, 5},
 			chunks:   0,
 			expected: [][]int{{1, 2, 3, 4, 5}},
-			errMsg:   "empty size passed",
+			err:      ErrEmptySizePassed,
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			result, err := SplitSlice(tc.slice, tc.chunks)
-			if err != nil && err.Error() != tc.errMsg {
-				t.Errorf("Unexpected error. Expected: %v, Got: %v", tc.errMsg, err)
+			if err != nil && !errors.Is(err, tc.err) {
+				t.Errorf("Unexpected error. Expected: %v, Got: %v", tc.err, err)
 			}
 			if !reflect.DeepEqual(result, tc.expected) {
 				t.Errorf("Unexpected result. Expected: %v, Got: %v", tc.expected, result)

@@ -4,6 +4,11 @@ import (
 	"errors"
 )
 
+var (
+	ErrEmptyValuePassed = errors.New("empty v passed")
+	ErrEmptySizePassed  = errors.New("empty size passed")
+)
+
 func MapSlice[T any](slice []T, callback func(item T) T) []T {
 	r := append(slice)
 	for i, v := range r {
@@ -37,11 +42,11 @@ func chunkSliceBySize[T any](v []T, size int) ([][]T, error) {
 	result := make([][]T, 0)
 
 	if len(v) == 0 {
-		return result, errors.New("empty v passed")
+		return result, ErrEmptyValuePassed
 	}
 
 	if size == 0 {
-		return result, errors.New("empty size passed")
+		return result, ErrEmptySizePassed
 	}
 
 	for {
