@@ -9,17 +9,6 @@ import (
 	"strings"
 )
 
-func MkdirIfNotExists(dirTarget string) error {
-	if _, err := os.Stat(dirTarget); os.IsNotExist(err) {
-		err = os.Mkdir(dirTarget, os.ModePerm)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
 func ScanDirByExtension(path string, ext string, recursive bool) ([]string, error) {
 	entries := make([]string, 0)
 	var err error
@@ -37,6 +26,7 @@ func ScanDirByExtension(path string, ext string, recursive bool) ([]string, erro
 
 	return entries, nil
 }
+
 func scanDirRecursively(path string) ([]string, error) {
 	result := make([]string, 0)
 
@@ -56,6 +46,7 @@ func scanDirRecursively(path string) ([]string, error) {
 	return result, nil
 
 }
+
 func scanDir(path string) ([]string, error) {
 	result := make([]string, 0)
 
@@ -95,10 +86,10 @@ func ReadFileAsString(path string) (string, error) {
 	return string(bytes), nil
 }
 
-func WriteFileForced(text string, path string) error {
+func WriteFile(text string, path string) error {
 	dir := filepath.Dir(path)
 
-	err := MkdirIfNotExists(dir)
+	err := os.MkdirAll(dir, os.ModePerm)
 	if err != nil {
 		return err
 	}

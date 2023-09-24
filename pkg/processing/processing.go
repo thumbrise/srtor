@@ -118,10 +118,13 @@ func (p *Processor) processFile(path string) error {
 	base := filepath.Base(path)
 	resultPath := filepath.Join(dir, p.resultDirName, base)
 
-	err = fsutil.WriteFileForced(translatedText, resultPath)
+	err = fsutil.WriteFile(translatedText, resultPath)
 	if err != nil {
 		log.Println(err)
 		return err
+	}
+
+	if p.needReplace {
 	}
 
 	return nil
