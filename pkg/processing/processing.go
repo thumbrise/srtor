@@ -1,34 +1,47 @@
 package processing
 
 import (
-	"bytes"
 	"github.com/schollz/progressbar/v3"
 	"log"
 	"os"
 	"path/filepath"
 	"runtime"
+	"srtor/pkg/fsutil"
 	"srtor/pkg/transl"
 	"srtor/pkg/util"
 	"sync"
 )
 
-var unicodeReplacement = []byte{0xef, 0xbf, 0xbd}
-
 type Processor struct {
 	langSource    string
 	langTarget    string
 	numThreads    int
-	targetDirName string
+	resultDirName string
+	needReplace   bool
+	needArchive   bool
+	forArchive    map[string][]string
 }
 
-func NewProcessor(langSource string, langTarget string, destination string) Processor {
-	return Processor{
+func NewProcessor(langSource string, langTarget string, resultDirName string) *Processor {
+	return &Processor{
 		langSource:    langSource,
 		langTarget:    langTarget,
 		numThreads:    runtime.NumCPU(),
-		targetDirName: destination,
+		resultDirName: resultDirName,
+		forArchive:    make(map[string][]string),
 	}
 }
+
+func (p *Processor) WithReplace(v bool) *Processor {
+	p.needReplace = v
+	return p
+}
+
+func (p *Processor) WithArchive(v bool) *Processor {
+	p.needArchive = v
+	return p
+}
+
 func (p *Processor) Process(files []string) {
 	filesLen := len(files)
 
@@ -36,36 +49,67 @@ func (p *Processor) Process(files []string) {
 		return
 	}
 
-	bar := progressbar.Default(int64(filesLen))
-	numGoroutines := util.Max(p.numThreads, 0)
-	numGoroutines = util.Min(numGoroutines, filesLen)
-	chunkSize := filesLen / numGoroutines
-	chunks, err := util.ChunkSlice(files, chunkSize)
+	bar := newProgressBar(filesLen)
+	chunks, err := util.SliceSplit(files, p.numThreads)
 	if err != nil {
 		log.Println(err)
 	}
 
+	p.threadChunks(chunks, func() error {
+		err = bar.Add(1)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	for zipPath, filePaths := range p.forArchive {
+		err := fsutil.ZipCreate(zipPath, filePaths)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		for _, filePath := range filePaths {
+			err := os.Remove(filePath)
+			if err != nil {
+				log.Fatal(err)
+			}
+		}
+	}
+}
+
+func (p *Processor) threadChunks(chunks [][]string, onFileProcessed func() error) {
 	wg := sync.WaitGroup{}
+
 	for i := range chunks {
 		wg.Add(1)
-		go func(paths []string, bar *progressbar.ProgressBar) {
+
+		chunk := chunks[i]
+		go func(paths []string) {
 			defer wg.Done()
-			err := p.iteratePaths(paths, bar)
+			err := p.processReal(paths, onFileProcessed)
 			if err != nil {
 				log.Println(err)
 			}
-		}(chunks[i], bar)
+		}(chunk)
 	}
+
 	wg.Wait()
 }
 
-func (p *Processor) iteratePaths(paths []string, bar *progressbar.ProgressBar) error {
+func newProgressBar(length int) *progressbar.ProgressBar {
+	return progressbar.Default(int64(length))
+}
+
+func (p *Processor) processReal(paths []string, onFileProcessed func() error) error {
 	for _, path := range paths {
 		err := p.processFile(path)
 		if err != nil {
 			return err
 		}
-		err = bar.Add(1)
+
+		err = onFileProcessed()
 		if err != nil {
 			return err
 		}
@@ -75,24 +119,38 @@ func (p *Processor) iteratePaths(paths []string, bar *progressbar.ProgressBar) e
 }
 
 func (p *Processor) processFile(path string) error {
-	source, err := os.ReadFile(path)
+	originalText, err := fsutil.FileReadAsString(path)
 	if err != nil {
-		return err
-	}
-	target, err := transl.Translate(string(source), p.langSource, p.langTarget)
-	if err != nil {
+		log.Println(err)
 		return err
 	}
 
-	sourceName := filepath.Base(path)
-	targetPath := filepath.Join(p.targetDirName, sourceName)
-	targetBytes := []byte(target)
-
-	targetBytes = bytes.ToValidUTF8(targetBytes, unicodeReplacement)
-
-	err = os.WriteFile(targetPath, targetBytes, os.ModePerm)
+	translatedText, err := transl.Translate(originalText, p.langSource, p.langTarget)
 	if err != nil {
+		log.Println(err)
 		return err
+	}
+
+	dir := filepath.Dir(path)
+	base := filepath.Base(path)
+	resultPath := filepath.Join(dir, p.resultDirName, base)
+
+	err = fsutil.FileWrite(translatedText, resultPath)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	if p.needReplace {
+		err := fsutil.FileSwap(path, resultPath)
+		if err != nil {
+			log.Println(err)
+			return err
+		}
+		if p.needArchive {
+			zipPath := filepath.Join(dir, p.resultDirName, "original.zip")
+			p.forArchive[zipPath] = append(p.forArchive[zipPath], resultPath)
+		}
 	}
 
 	return nil

@@ -1,37 +1,53 @@
 package main
 
 import (
-	"path/filepath"
-	"srtor/pkg/fs"
+	"log"
+	"srtor/pkg/fsutil"
 	"srtor/pkg/interaction"
 	"srtor/pkg/processing"
+	"srtor/pkg/util"
+	"strings"
 )
 
-const targetDirName = "srtor"
+const resultDirName = "srtor-result"
 const translatableExtension = "srt"
 
 func main() {
+	configureLogger()
+
 	directory, err := interaction.AskDirectory()
 	if err != nil {
-		panic(err)
-	}
-
-	files, err := fs.ScanDirByExtension(directory, translatableExtension)
-	if err != nil {
-		panic(err)
-	}
-
-	destination := filepath.Join(directory, targetDirName)
-	err = fs.MkdirOrIgnore(destination)
-	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	languageSource := interaction.AskLanguageSource()
 	languageTarget := interaction.AskLanguageTarget()
 
-	processor := processing.NewProcessor(languageSource, languageTarget, destination)
-	processor.Process(files)
+	needRecursive := interaction.AskRecursive()
+	files, err := fsutil.ScanDirByExtension(directory, translatableExtension, needRecursive)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	files = util.SliceFilter(files, func(v string) bool {
+		return !strings.Contains(v, resultDirName)
+	})
+
+	needReplace := interaction.AskReplace()
+	needArchive := false
+	if needReplace {
+		needArchive = interaction.AskArchive()
+	}
+
+	processing.
+		NewProcessor(languageSource, languageTarget, resultDirName).
+		WithReplace(needReplace).
+		WithArchive(needArchive).
+		Process(files)
 
 	interaction.Bye(len(files), directory)
+}
+
+func configureLogger() {
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
 }

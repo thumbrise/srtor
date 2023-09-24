@@ -1,0 +1,451 @@
+1
+00:00:01,536 --> 00:00:02,560
+Hello and welcome
+
+2
+00:00:03,072 --> 00:00:05,888
+The score is called multi treading in goal
+
+3
+00:00:06,912 --> 00:00:09,984
+A thread is simply the stool or this abstraction
+
+4
+00:00:10,240 --> 00:00:12,032
+That allows us to perform
+
+5
+00:00:12,288 --> 00:00:13,312
+Parallel computation
+
+6
+00:00:14,336 --> 00:00:16,640
+Computing is the
+
+7
+00:00:16,896 --> 00:00:17,920
+Or Some people prefer
+
+8
+00:00:18,176 --> 00:00:18,688
+I have to call it
+
+9
+00:00:19,456 --> 00:00:22,784
+Where you can have this one problem and throw different
+
+10
+00:00:23,040 --> 00:00:24,320
+Processing units at it
+
+11
+00:00:24,832 --> 00:00:26,624
+So we can solve it faster and quick
+
+12
+00:00:27,648 --> 00:00:29,696
+This whole course is about learning how to do that
+
+13
+00:00:30,208 --> 00:00:32,256
+It's about learning how we can program
+
+14
+00:00:32,512 --> 00:00:34,304
+He's a special types of algorithms
+
+15
+00:00:34,816 --> 00:00:35,840
+So we can solve
+
+16
+00:00:36,096 --> 00:00:36,864
+Problems quick
+
+17
+00:00:37,888 --> 00:00:38,400
+Now
+
+18
+00:00:38,656 --> 00:00:41,984
+To start my courses with the more difficult or the more theoretical
+
+19
+00:00:43,008 --> 00:00:44,032
+Off the subject
+
+20
+00:00:44,288 --> 00:00:49,152
+And this is what we will do now we will examine some of the properties and the laws surrounding
+
+21
+00:00:49,408 --> 00:00:50,432
+Parallel computing
+
+22
+00:00:52,224 --> 00:00:54,528
+In order to understand the laws and
+
+23
+00:00:54,784 --> 00:00:55,296
+It's around
+
+24
+00:00:55,552 --> 00:00:56,576
+For the computing
+
+25
+00:00:56,832 --> 00:00:58,368
+Let's make use of a simple example
+
+26
+00:00:58,880 --> 00:01:03,488
+Imagine for example you hire a builder to build you a fence right a brick
+
+27
+00:01:03,744 --> 00:01:09,888
+Fence and after you hire this Builder he sits on his job and in 8 days he manages to
+
+28
+00:01:10,144 --> 00:01:11,680
+Build this fans or this
+
+29
+00:01:11,936 --> 00:01:13,216
+Now imagine that
+
+30
+00:01:13,472 --> 00:01:14,752
+You wanted to be
+
+31
+00:01:15,008 --> 00:01:21,152
+A little faster you might hire to builders instead of one and instead of it being finished in 8 days it's now finished
+
+32
+00:01:21,408 --> 00:01:21,920
+Just in
+
+33
+00:01:22,688 --> 00:01:24,480
+But what if you hire for people
+
+34
+00:01:24,992 --> 00:01:27,296
+Now you have bad things up even further
+
+35
+00:01:27,552 --> 00:01:29,600
+And the wall has been built in
+
+36
+00:01:29,856 --> 00:01:34,208
+What's 3 days you decide to hire even more people in this example you have hired
+
+37
+00:01:34,464 --> 00:01:37,536
+And now you have finished the job in Just 2
+
+38
+00:01:38,048 --> 00:01:42,400
+As you might expect there is a limit on how much time you can speed it up
+
+39
+00:01:42,656 --> 00:01:44,960
+Write the limit in this case is 2
+
+40
+00:01:45,216 --> 00:01:46,752
+You can never get the world
+
+41
+00:01:47,008 --> 00:01:47,776
+Much faster
+
+42
+00:01:48,032 --> 00:01:48,800
+Then
+
+43
+00:01:49,056 --> 00:01:50,336
+It's just by hiring more
+
+44
+00:01:50,848 --> 00:01:54,688
+If you have ever worked in a development team and this is probably familiar right
+
+45
+00:01:54,944 --> 00:01:58,016
+The project managers or the business owners
+
+46
+00:01:58,272 --> 00:02:01,600
+Besides to throw more developers at the project
+
+47
+00:02:02,112 --> 00:02:04,672
+Thinking that they will finish the project quicker
+
+48
+00:02:05,184 --> 00:02:07,488
+They might speed up things a little bit but
+
+49
+00:02:07,744 --> 00:02:09,536
+The speed up is not linear right
+
+50
+00:02:10,048 --> 00:02:13,376
+You cannot throw for example 1,000 developers on the same project
+
+51
+00:02:13,888 --> 00:02:15,168
+And expect it to be
+
+52
+00:02:15,424 --> 00:02:16,448
+1000 *
+
+53
+00:02:16,960 --> 00:02:17,472
+It's not going to work
+
+54
+00:02:19,008 --> 00:02:19,776
+In
+
+55
+00:02:20,032 --> 00:02:26,176
+Build the wall example you know we can build multiple walls in parallel right we can have different work
+
+56
+00:02:26,432 --> 00:02:28,224
+Where is building different parts of the world
+
+57
+00:02:28,480 --> 00:02:29,248
+Simultaneous
+
+58
+00:02:29,760 --> 00:02:31,808
+However because we have only
+
+59
+00:02:32,064 --> 00:02:33,856
+Wheelbarrow right to carry the brick
+
+60
+00:02:34,112 --> 00:02:34,880
+We can only have
+
+61
+00:02:35,136 --> 00:02:35,904
+If one person
+
+62
+00:02:36,160 --> 00:02:37,184
+Set the time using
+
+63
+00:02:37,440 --> 00:02:38,208
+Wheel
+
+64
+00:02:38,464 --> 00:02:40,000
+This is our bottl
+
+65
+00:02:40,256 --> 00:02:43,072
+If this was a program this would be the sequential part
+
+66
+00:02:43,328 --> 00:02:44,352
+Off our program
+
+67
+00:02:44,608 --> 00:02:47,936
+Only one person can carry the bricks we using this one
+
+68
+00:02:48,448 --> 00:02:48,960
+Wheel
+
+69
+00:02:49,216 --> 00:02:52,032
+So it's important to realize that each program will have
+
+70
+00:02:52,288 --> 00:02:53,568
+Parallel park
+
+71
+00:02:53,824 --> 00:02:54,848
+The one where we
+
+72
+00:02:55,872 --> 00:02:57,408
+Multiple process is working on
+
+73
+00:02:57,664 --> 00:02:58,176
+On that
+
+74
+00:02:58,688 --> 00:03:00,736
+And the sequential part right we're only
+
+75
+00:03:00,992 --> 00:03:02,016
+One process
+
+76
+00:03:02,528 --> 00:03:06,880
+And the ratio between this parallel and sequential part will dictate
+
+77
+00:03:07,136 --> 00:03:07,648
+The speed
+
+78
+00:03:07,904 --> 00:03:08,672
+Stop that we can a
+
+79
+00:03:09,184 --> 00:03:10,976
+This is called amdahl
+
+80
+00:03:11,488 --> 00:03:13,280
+And it's a property where we can arrive
+
+81
+00:03:13,536 --> 00:03:14,304
+If the speed
+
+82
+00:03:14,560 --> 00:03:17,888
+Depending on the ratio between the parallel and the sequent
+
+83
+00:03:19,168 --> 00:03:20,960
+Over here we have a few examples
+
+84
+00:03:21,216 --> 00:03:22,240
+What is each plot is
+
+85
+00:03:22,496 --> 00:03:25,568
+Is in different color for example the green one over here we have
+
+86
+00:03:25,824 --> 00:03:28,384
+If every show of 9525
+
+87
+00:03:28,640 --> 00:03:30,432
+Sequential right to 5% is
+
+88
+00:03:31,968 --> 00:03:32,480
+As you can
+
+89
+00:03:32,736 --> 00:03:34,784
+Even though we only have 5%
+
+90
+00:03:35,040 --> 00:03:35,552
+List
+
+91
+00:03:36,832 --> 00:03:37,856
+Particular program
+
+92
+00:03:38,368 --> 00:03:40,160
+Even when we have 256
+
+93
+00:03:40,416 --> 00:03:42,976
+Is processor is working on the same problem
+
+94
+00:03:43,232 --> 00:03:45,024
+We only achieve a speed up
+
+95
+00:03:45,280 --> 00:03:46,048
+19
+
+96
+00:03:46,304 --> 00:03:46,816
+Cancel about
+
+97
+00:03:47,072 --> 00:03:47,584
+19
+
+98
+00:03:48,352 --> 00:03:49,632
+The situation is worse
+
+99
+00:03:50,656 --> 00:03:55,008
+The sequential part is higher this red line over here for example is
+
+100
+00:03:55,264 --> 00:03:58,592
+75 percent parallel 25% sequent
+
+101
+00:03:59,104 --> 00:04:00,384
+The blue line over here is
+
+102
+00:04:00,896 --> 00:04:02,432
+The 50 % parallel
+
+103
+00:04:02,688 --> 00:04:03,200
+50
+
+104
+00:04:06,528 --> 00:04:07,808
+After you get a double speed
+
+105
+00:04:08,576 --> 00:04:09,088
+It will
+
+106
+00:04:09,344 --> 00:04:10,112
+Play pretty much the
+
+107
+00:04:10,368 --> 00:04:10,880
+Name no matter
+
+108
+00:04:11,136 --> 00:04:12,160
+How many process
+
+109
+00:04:13,952 --> 00:04:15,744
+However this is not the whole story
+
+110
+00:04:16,000 --> 00:04:17,024
+There's another parts
+
+111
+00:04:17,280 --> 00:04:19,583
+Do part of computing that is called
+
+112
+00:04:19,839 --> 00:04:20,607
+Gustav's
+
+113
+00:04:21,119 --> 00:04:23,679
+And we will examine this law in the next video

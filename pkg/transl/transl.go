@@ -5,12 +5,20 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
+	"srtor/pkg/util"
 	"strings"
 )
 
+const EnvTranslateDebug = "TRANSLATE_DEBUG"
+
 func Translate(source, sourceLang, targetLang string) (string, error) {
+	if util.EnvGetBool(EnvTranslateDebug) {
+		return source, nil
+	}
+
 	var text []string
 	var result []interface{}
 	encodedSource := url.QueryEscape(source)
@@ -22,19 +30,20 @@ func Translate(source, sourceLang, targetLang string) (string, error) {
 	)
 	r, err := http.Get(u)
 	if err != nil {
-		return "err", errors.New("Error getting translate.googleapis.com")
+		return "err", errors.New("error getting translate.googleapis.com")
 	}
 
 	defer r.Body.Close()
 
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		return "err", errors.New("Error reading response body")
+		return "err", errors.New("error reading response body")
 	}
 
 	err = json.Unmarshal(body, &result)
 	if err != nil {
-		return "err", errors.New("Error unmarshaling data")
+		log.Printf("\nstatus: %v\nresponse:\n%v", r.Status, string(body))
+		return "err", errors.New("error unmarshaling data")
 	}
 
 	if len(result) > 0 {
@@ -49,6 +58,6 @@ func Translate(source, sourceLang, targetLang string) (string, error) {
 
 		return cText, nil
 	} else {
-		return "err", errors.New("No translated data in responce")
+		return "err", errors.New("no translated data in responce")
 	}
 }
