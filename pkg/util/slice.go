@@ -9,9 +9,9 @@ var (
 	ErrEmptySizePassed  = errors.New("empty size passed")
 )
 
-func SplitSlice[T any](slice []T, chunks int) ([][]T, error) {
+func SliceSplit[T any](slice []T, chunks int) ([][]T, error) {
 	chunkSize := calculateChunkSize(len(slice), chunks)
-	r, err := chunkSliceBySize(slice, chunkSize)
+	r, err := sliceSplitBySize(slice, chunkSize)
 
 	return r, err
 }
@@ -29,7 +29,7 @@ func calculateChunkSize(total, divider int) int {
 	return total / dividerReal
 }
 
-func chunkSliceBySize[T any](v []T, size int) ([][]T, error) {
+func sliceSplitBySize[T any](v []T, size int) ([][]T, error) {
 	result := make([][]T, 0)
 
 	if len(v) == 0 {
@@ -55,4 +55,18 @@ func chunkSliceBySize[T any](v []T, size int) ([][]T, error) {
 	}
 
 	return result, nil
+}
+func SliceFilter[T any](vv []T, filter func(v T) bool) []T {
+	result := make([]T, 0)
+
+	for _, v := range vv {
+		ok := filter(v)
+		if !ok {
+			continue
+		}
+
+		result = append(result, v)
+	}
+
+	return result
 }

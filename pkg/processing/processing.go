@@ -3,6 +3,7 @@ package processing
 import (
 	"github.com/schollz/progressbar/v3"
 	"log"
+	"os"
 	"path/filepath"
 	"runtime"
 	"srtor/pkg/fsutil"
@@ -18,6 +19,7 @@ type Processor struct {
 	resultDirName string
 	needReplace   bool
 	needArchive   bool
+	forArchive    map[string][]string
 }
 
 func NewProcessor(langSource string, langTarget string, resultDirName string) *Processor {
@@ -26,6 +28,7 @@ func NewProcessor(langSource string, langTarget string, resultDirName string) *P
 		langTarget:    langTarget,
 		numThreads:    runtime.NumCPU(),
 		resultDirName: resultDirName,
+		forArchive:    make(map[string][]string),
 	}
 }
 
@@ -47,7 +50,7 @@ func (p *Processor) Process(files []string) {
 	}
 
 	bar := newProgressBar(filesLen)
-	chunks, err := util.SplitSlice(files, p.numThreads)
+	chunks, err := util.SliceSplit(files, p.numThreads)
 	if err != nil {
 		log.Println(err)
 	}
@@ -60,6 +63,20 @@ func (p *Processor) Process(files []string) {
 
 		return nil
 	})
+
+	for zipPath, filePaths := range p.forArchive {
+		err := fsutil.ZipCreate(zipPath, filePaths)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		for _, filePath := range filePaths {
+			err := os.Remove(filePath)
+			if err != nil {
+				log.Fatal(err)
+			}
+		}
+	}
 }
 
 func (p *Processor) threadChunks(chunks [][]string, onFileProcessed func() error) {
@@ -129,6 +146,10 @@ func (p *Processor) processFile(path string) error {
 		if err != nil {
 			log.Println(err)
 			return err
+		}
+		if p.needArchive {
+			zipPath := filepath.Join(dir, p.resultDirName, "original.zip")
+			p.forArchive[zipPath] = append(p.forArchive[zipPath], resultPath)
 		}
 	}
 

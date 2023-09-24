@@ -5,9 +5,11 @@ import (
 	"srtor/pkg/fsutil"
 	"srtor/pkg/interaction"
 	"srtor/pkg/processing"
+	"srtor/pkg/util"
+	"strings"
 )
 
-const resultDirName = "srtor"
+const resultDirName = "srtor-result"
 const translatableExtension = "srt"
 
 func main() {
@@ -26,6 +28,10 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	files = util.SliceFilter(files, func(v string) bool {
+		return !strings.Contains(v, resultDirName)
+	})
 
 	needReplace := interaction.AskReplace()
 	needArchive := false

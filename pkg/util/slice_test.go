@@ -43,7 +43,7 @@ func TestChunkSlice(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotChunks, err := chunkSliceBySize(tt.slice, tt.chunkSize)
+			gotChunks, err := sliceSplitBySize(tt.slice, tt.chunkSize)
 
 			if tt.wantError {
 				if err == nil {
@@ -55,7 +55,7 @@ func TestChunkSlice(t *testing.T) {
 			}
 
 			if !reflect.DeepEqual(gotChunks, tt.wantChunks) {
-				t.Errorf("chunkSliceBySize() = %v, want %v", gotChunks, tt.wantChunks)
+				t.Errorf("sliceSplitBySize() = %v, want %v", gotChunks, tt.wantChunks)
 			}
 		})
 	}
@@ -146,7 +146,7 @@ func TestSplitSlice(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			result, err := SplitSlice(tc.slice, tc.chunks)
+			result, err := SliceSplit(tc.slice, tc.chunks)
 			if err != nil && !errors.Is(err, tc.err) {
 				t.Errorf("Unexpected error. Expected: %v, Got: %v", tc.err, err)
 			}

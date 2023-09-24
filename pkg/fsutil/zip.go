@@ -4,6 +4,7 @@ import (
 	"archive/zip"
 	"io"
 	"os"
+	"path/filepath"
 )
 
 func ZipCreate(zipPath string, filePaths []string) error {
@@ -33,7 +34,8 @@ func zipAddFile(filePath string, zipW *zip.Writer) error {
 	}
 	defer originalF.Close()
 
-	zipFileW, err := zipW.Create(filePath)
+	fileBase := filepath.Base(filePath)
+	zipFileW, err := zipW.Create(fileBase)
 	if err != nil {
 		return err
 	}

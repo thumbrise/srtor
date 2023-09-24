@@ -8,6 +8,8 @@ import (
 	"testing"
 )
 
+const resultDirName = "srtor-result"
+
 func TestProcessor_Process(t *testing.T) {
 	removeTempDir()
 
@@ -59,8 +61,6 @@ func process() {
 		log.Fatal(err)
 	}
 
-	targetDirName := "srtor"
-
-	processor := NewProcessor("en", "ru", targetDirName)
+	processor := NewProcessor("en", "ru", resultDirName)
 	processor.Process(files)
 }
