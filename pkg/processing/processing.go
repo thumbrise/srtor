@@ -3,7 +3,6 @@ package processing
 import (
 	"github.com/schollz/progressbar/v3"
 	"log"
-	"os"
 	"path/filepath"
 	"runtime"
 	"srtor/pkg/fsutil"
@@ -16,17 +15,17 @@ type Processor struct {
 	langSource    string
 	langTarget    string
 	numThreads    int
-	targetDirName string
+	resultDirName string
 	needReplace   bool
 	needArchive   bool
 }
 
-func NewProcessor(langSource string, langTarget string, destination string) *Processor {
+func NewProcessor(langSource string, langTarget string, resultDirName string) *Processor {
 	return &Processor{
 		langSource:    langSource,
 		langTarget:    langTarget,
 		numThreads:    runtime.NumCPU(),
-		targetDirName: destination,
+		resultDirName: resultDirName,
 	}
 }
 func (p *Processor) WithReplace(v bool) *Processor {
@@ -84,31 +83,23 @@ func (p *Processor) iteratePaths(paths []string, bar *progressbar.ProgressBar) e
 }
 
 func (p *Processor) processFile(path string) error {
-	source, err := os.ReadFile(path)
-	if err != nil {
-		return err
-	}
-
-	translated, err := transl.Translate(string(source), p.langSource, p.langTarget)
+	originalText, err := fsutil.ReadFileAsString(path)
 	if err != nil {
 		log.Println(err)
 		return err
 	}
 
-	sourceName := filepath.Base(path)
-	sourceDir := filepath.Dir(path)
-	destination := filepath.Join(sourceDir, p.targetDirName)
-
-	err = fsutil.MkdirOrIgnore(destination)
+	translatedText, err := transl.Translate(originalText, p.langSource, p.langTarget)
 	if err != nil {
 		log.Println(err)
 		return err
 	}
 
-	resultPath := filepath.Join(destination, sourceName)
-	resultBytes := util.FixUTF8(translated)
+	dir := filepath.Dir(path)
+	base := filepath.Base(path)
+	resultPath := filepath.Join(dir, p.resultDirName, base)
 
-	err = os.WriteFile(resultPath, resultBytes, os.ModePerm)
+	err = fsutil.WriteFileForced(translatedText, resultPath)
 	if err != nil {
 		log.Println(err)
 		return err

@@ -5,10 +5,11 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"srtor/pkg/util"
 	"strings"
 )
 
-func MkdirOrIgnore(dirTarget string) error {
+func MkdirIfNotExists(dirTarget string) error {
 	if _, err := os.Stat(dirTarget); os.IsNotExist(err) {
 		err = os.Mkdir(dirTarget, os.ModePerm)
 		if err != nil {
@@ -18,6 +19,7 @@ func MkdirOrIgnore(dirTarget string) error {
 
 	return nil
 }
+
 func ScanDirByExtension(path string, ext string, recursive bool) ([]string, error) {
 	entries, err := scanDir(path, recursive)
 	if err != nil {
@@ -28,6 +30,7 @@ func ScanDirByExtension(path string, ext string, recursive bool) ([]string, erro
 
 	return entries, nil
 }
+
 func scanDir(path string, recursive bool) ([]string, error) {
 	var result []string
 
@@ -71,4 +74,31 @@ func filterByExtension(paths []string, ext string) []string {
 	}
 
 	return result
+}
+
+func ReadFileAsString(path string) (string, error) {
+	bytes, err := os.ReadFile(path)
+	if err != nil {
+		return "", err
+	}
+
+	return string(bytes), nil
+}
+
+func WriteFileForced(text string, path string) error {
+	dir := filepath.Dir(path)
+
+	err := MkdirIfNotExists(dir)
+	if err != nil {
+		return err
+	}
+
+	bytes := util.ToUTF8FixedBytes(text)
+
+	err = os.WriteFile(path, bytes, os.ModePerm)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
