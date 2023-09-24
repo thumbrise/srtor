@@ -66,7 +66,6 @@ func (p *Processor) threadChunks(chunks [][]string, onFileProcessed func() error
 	wg := sync.WaitGroup{}
 
 	for i := range chunks {
-
 		wg.Add(1)
 
 		chunk := chunks[i]
