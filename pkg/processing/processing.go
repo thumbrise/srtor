@@ -86,14 +86,14 @@ func newProgressBar(length int) *progressbar.ProgressBar {
 	return progressbar.Default(int64(length))
 }
 
-func (p *Processor) processReal(paths []string, onEach func() error) error {
+func (p *Processor) processReal(paths []string, onFileProcessed func() error) error {
 	for _, path := range paths {
 		err := p.processFile(path)
 		if err != nil {
 			return err
 		}
 
-		err = onEach()
+		err = onFileProcessed()
 		if err != nil {
 			return err
 		}
