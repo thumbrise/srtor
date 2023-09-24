@@ -41,7 +41,7 @@ func TestProcessor_Process(t *testing.T) {
 func removeTempDir() {
 	directory, err := filepath.Abs("./testdata/srtor")
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	err = os.RemoveAll(directory)
 	if err != nil {

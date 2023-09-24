@@ -15,7 +15,7 @@ func main() {
 
 	directory, err := interaction.AskDirectory()
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	languageSource := interaction.AskLanguageSource()
@@ -24,7 +24,7 @@ func main() {
 	needRecursive := interaction.AskRecursive()
 	files, err := fs.ScanDirByExtension(directory, translatableExtension, needRecursive)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	needReplace := interaction.AskReplace()
