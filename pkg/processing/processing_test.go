@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"srtor/pkg/fsutil"
+	"srtor/pkg/util"
 	"testing"
 )
 
@@ -56,11 +57,12 @@ func process() {
 		log.Fatal(err)
 	}
 
-	files, err := fsutil.ScanDirByExtension(directory, "srt", false)
+	files, err := fsutil.DirScan(directory, false)
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	files = util.SliceFilterBySuffix(files, "srt")
 	processor := NewProcessor("en", "ru", resultDirName)
 	processor.Process(files)
 }

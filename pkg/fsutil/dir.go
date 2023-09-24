@@ -4,28 +4,25 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
-	"strings"
 )
 
-func ScanDirByExtension(path string, ext string, recursive bool) ([]string, error) {
+func DirScan(path string, recursive bool) ([]string, error) {
 	entries := make([]string, 0)
 	var err error
 
 	if recursive {
-		entries, err = scanDirRecursively(path)
+		entries, err = DirScanRecursively(path)
 	} else {
-		entries, err = scanDir(path)
+		entries, err = DirScanPlain(path)
 	}
 	if err != nil {
 		return nil, err
 	}
 
-	entries = filterByExtension(entries, ext)
-
 	return entries, nil
 }
 
-func scanDirRecursively(path string) ([]string, error) {
+func DirScanRecursively(path string) ([]string, error) {
 	result := make([]string, 0)
 
 	err := filepath.Walk(path, func(path string, info fs.FileInfo, err error) error {
@@ -45,7 +42,7 @@ func scanDirRecursively(path string) ([]string, error) {
 
 }
 
-func scanDir(path string) ([]string, error) {
+func DirScanPlain(path string) ([]string, error) {
 	result := make([]string, 0)
 
 	d, err := os.ReadDir(path)
@@ -58,19 +55,4 @@ func scanDir(path string) ([]string, error) {
 	}
 
 	return result, nil
-}
-
-func filterByExtension(paths []string, ext string) []string {
-	result := make([]string, 0)
-
-	for _, p := range paths {
-		ok := strings.HasSuffix(p, ext)
-		if !ok {
-			continue
-		}
-
-		result = append(result, p)
-	}
-
-	return result
 }
