@@ -125,6 +125,11 @@ func (p *Processor) processFile(path string) error {
 	}
 
 	if p.needReplace {
+		err := fsutil.SwapFiles(path, resultPath)
+		if err != nil {
+			log.Println(err)
+			return err
+		}
 	}
 
 	return nil

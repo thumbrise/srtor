@@ -103,3 +103,33 @@ func WriteFile(text string, path string) error {
 
 	return nil
 }
+func SwapFiles(a, b string) error {
+	_, aStatErr := os.Stat(a)
+	_, bStatErr := os.Stat(b)
+	if os.IsNotExist(aStatErr) {
+		log.Fatal("OK")
+		return bStatErr
+	}
+	if os.IsNotExist(bStatErr) {
+		return bStatErr
+	}
+
+	aTemp := a + ".temp"
+
+	err := os.Rename(a, aTemp)
+	if err != nil {
+		return err
+	}
+
+	err = os.Rename(b, a)
+	if err != nil {
+		return err
+	}
+
+	err = os.Rename(aTemp, b)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
