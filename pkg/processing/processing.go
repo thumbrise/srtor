@@ -102,7 +102,7 @@ func (p *Processor) processReal(paths []string, onFileProcessed func() error) er
 }
 
 func (p *Processor) processFile(path string) error {
-	originalText, err := fsutil.ReadFileAsString(path)
+	originalText, err := fsutil.FileReadAsString(path)
 	if err != nil {
 		log.Println(err)
 		return err
@@ -118,14 +118,14 @@ func (p *Processor) processFile(path string) error {
 	base := filepath.Base(path)
 	resultPath := filepath.Join(dir, p.resultDirName, base)
 
-	err = fsutil.WriteFile(translatedText, resultPath)
+	err = fsutil.FileWrite(translatedText, resultPath)
 	if err != nil {
 		log.Println(err)
 		return err
 	}
 
 	if p.needReplace {
-		err := fsutil.SwapFiles(path, resultPath)
+		err := fsutil.FileSwap(path, resultPath)
 		if err != nil {
 			log.Println(err)
 			return err

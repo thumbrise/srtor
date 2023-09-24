@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestSwapFiles(t *testing.T) {
+func TestFileSwap(t *testing.T) {
 	testCases := []struct {
 		name          string
 		inputA        string
@@ -47,8 +47,8 @@ func TestSwapFiles(t *testing.T) {
 			}
 			file2.Close()
 
-			// Call the SwapFiles function
-			err = SwapFiles(tc.inputA, tc.inputB)
+			// Call the FileSwap function
+			err = FileSwap(tc.inputA, tc.inputB)
 
 			// Check if the error matches the expected result
 			if err != nil {
@@ -60,6 +60,45 @@ func TestSwapFiles(t *testing.T) {
 			// Clean up the temporary files
 			os.Remove(tc.inputA)
 			os.Remove(tc.inputB)
+		})
+	}
+}
+
+func TestFileOpenOrCreate(t *testing.T) {
+	tests := []struct {
+		name    string
+		path    string
+		wantErr bool
+	}{
+		{
+			name:    "Create new zip file",
+			path:    "test.zip",
+			wantErr: false,
+		},
+		{
+			name:    "Ignore existing zip file",
+			path:    "test.zip",
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if !tt.wantErr {
+				file, err := os.Create(tt.path)
+				if err != nil {
+					t.Fatalf("Failed to create test file: %v", err)
+				}
+				defer os.Remove(tt.path)
+				defer file.Close()
+			}
+
+			f, err := FileOpenOrCreate(tt.path)
+			f.Close()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("FileOpenOrCreate() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
 		})
 	}
 }

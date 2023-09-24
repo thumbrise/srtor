@@ -2,10 +2,8 @@ package fsutil
 
 import (
 	"io/fs"
-	"log"
 	"os"
 	"path/filepath"
-	"srtor/pkg/util"
 	"strings"
 )
 
@@ -19,7 +17,7 @@ func ScanDirByExtension(path string, ext string, recursive bool) ([]string, erro
 		entries, err = scanDir(path)
 	}
 	if err != nil {
-		log.Println(err)
+		return nil, err
 	}
 
 	entries = filterByExtension(entries, ext)
@@ -75,61 +73,4 @@ func filterByExtension(paths []string, ext string) []string {
 	}
 
 	return result
-}
-
-func ReadFileAsString(path string) (string, error) {
-	bytes, err := os.ReadFile(path)
-	if err != nil {
-		return "", err
-	}
-
-	return string(bytes), nil
-}
-
-func WriteFile(text string, path string) error {
-	dir := filepath.Dir(path)
-
-	err := os.MkdirAll(dir, os.ModePerm)
-	if err != nil {
-		return err
-	}
-
-	bytes := util.ToUTF8FixedBytes(text)
-
-	err = os.WriteFile(path, bytes, os.ModePerm)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-func SwapFiles(a, b string) error {
-	_, aStatErr := os.Stat(a)
-	_, bStatErr := os.Stat(b)
-	if os.IsNotExist(aStatErr) {
-		log.Fatal("OK")
-		return bStatErr
-	}
-	if os.IsNotExist(bStatErr) {
-		return bStatErr
-	}
-
-	aTemp := a + ".temp"
-
-	err := os.Rename(a, aTemp)
-	if err != nil {
-		return err
-	}
-
-	err = os.Rename(b, a)
-	if err != nil {
-		return err
-	}
-
-	err = os.Rename(aTemp, b)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
