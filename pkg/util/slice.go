@@ -9,15 +9,6 @@ var (
 	ErrEmptySizePassed  = errors.New("empty size passed")
 )
 
-func MapSlice[T any](slice []T, callback func(item T) T) []T {
-	r := append(slice)
-	for i, v := range r {
-		r[i] = callback(v)
-	}
-
-	return r
-}
-
 func SplitSlice[T any](slice []T, chunks int) ([][]T, error) {
 	chunkSize := calculateChunkSize(len(slice), chunks)
 	r, err := chunkSliceBySize(slice, chunkSize)
