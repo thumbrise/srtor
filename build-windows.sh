@@ -1,3 +1,6 @@
+#!/usr/bin/env bash
+
+mkdir -p build
 GOOS=windows GOARCH=386 go build -o build/windows-386/srtor.exe
 GOOS=windows GOARCH=amd64 go build -o build/windows-amd64/srtor.exe
 GOOS=windows GOARCH=arm go build -o build/windows-arm/srtor.exe
