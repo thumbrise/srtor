@@ -1,6 +1,7 @@
 package processing
 
 import (
+	"errors"
 	"github.com/schollz/progressbar/v3"
 	"log"
 	"os"
@@ -12,13 +13,14 @@ import (
 	"sync"
 )
 
+var ErrPathNotAbsolute = errors.New("file path is not absolute")
+
 type Processor struct {
 	langSource    string
 	langTarget    string
 	numThreads    int
 	resultDirName string
 	needReplace   bool
-	needArchive   bool
 	forArchive    map[string][]string
 }
 
@@ -34,11 +36,6 @@ func NewProcessor(langSource string, langTarget string, resultDirName string) *P
 
 func (p *Processor) WithReplace(v bool) *Processor {
 	p.needReplace = v
-	return p
-}
-
-func (p *Processor) WithArchive(v bool) *Processor {
-	p.needArchive = v
 	return p
 }
 
@@ -101,10 +98,36 @@ func (p *Processor) threadChunks(chunks [][]string, onFileProcessed func() error
 func newProgressBar(length int) *progressbar.ProgressBar {
 	return progressbar.Default(int64(length))
 }
+func (p *Processor) evaluateFile(path string) (*FileInfo, error) {
+	if !filepath.IsAbs(path) {
+		return nil, ErrPathNotAbsolute
+	}
 
+	originalDir := filepath.Dir(path)
+	originalBase := filepath.Base(path)
+	targetFullPath := filepath.Join(originalDir, p.resultDirName, originalBase)
+	zipPath := filepath.Join(originalDir, p.resultDirName, "original.zip")
+
+	return &FileInfo{
+		sourceFullPath: path,
+		sourceBase:     originalBase,
+		sourceDir:      originalDir,
+		targetFullPath: targetFullPath,
+		zipFullPath:    zipPath,
+	}, nil
+}
 func (p *Processor) processReal(paths []string, onFileProcessed func() error) error {
+	fileInfos := make([]*FileInfo, 0)
 	for _, path := range paths {
-		err := p.processFile(path)
+		fileInfo, err := p.evaluateFile(path)
+		if err != nil {
+			return err
+		}
+
+		fileInfos = append(fileInfos, fileInfo)
+	}
+	for _, fileInfo := range fileInfos {
+		err := p.processFile(fileInfo)
 		if err != nil {
 			return err
 		}
@@ -118,8 +141,16 @@ func (p *Processor) processReal(paths []string, onFileProcessed func() error) er
 	return nil
 }
 
-func (p *Processor) processFile(path string) error {
-	originalText, err := fsutil.FileReadAsString(path)
+type FileInfo struct {
+	sourceFullPath string
+	sourceBase     string
+	sourceDir      string
+	targetFullPath string
+	zipFullPath    string
+}
+
+func (p *Processor) processFile(fileInfo *FileInfo) error {
+	originalText, err := fsutil.FileReadAsString(fileInfo.sourceFullPath)
 	if err != nil {
 		log.Println(err)
 		return err
@@ -131,26 +162,20 @@ func (p *Processor) processFile(path string) error {
 		return err
 	}
 
-	dir := filepath.Dir(path)
-	base := filepath.Base(path)
-	resultPath := filepath.Join(dir, p.resultDirName, base)
-
-	err = fsutil.FileWrite(translatedText, resultPath)
+	err = fsutil.FileWrite(translatedText, fileInfo.targetFullPath)
 	if err != nil {
 		log.Println(err)
 		return err
 	}
 
 	if p.needReplace {
-		err := fsutil.FileSwap(path, resultPath)
+		err := fsutil.FileSwap(fileInfo.sourceFullPath, fileInfo.targetFullPath)
 		if err != nil {
 			log.Println(err)
 			return err
 		}
-		if p.needArchive {
-			zipPath := filepath.Join(dir, p.resultDirName, "original.zip")
-			p.forArchive[zipPath] = append(p.forArchive[zipPath], resultPath)
-		}
+
+		p.forArchive[fileInfo.zipFullPath] = append(p.forArchive[fileInfo.zipFullPath], fileInfo.targetFullPath)
 	}
 
 	return nil

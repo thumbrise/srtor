@@ -23,10 +23,6 @@ func main() {
 	languageTarget := interaction.AskLanguageTarget()
 	needRecursive := interaction.AskRecursive()
 	needReplace := interaction.AskReplace()
-	needArchive := false
-	if needReplace {
-		needArchive = interaction.AskArchive()
-	}
 
 	files := scanDir(directory, needRecursive)
 	files = filterNonTranslatable(files)
@@ -35,7 +31,6 @@ func main() {
 	processing.
 		NewProcessor(languageSource, languageTarget, resultDirName).
 		WithReplace(needReplace).
-		WithArchive(needArchive).
 		Process(files)
 
 	interaction.Bye(len(files), directory)
