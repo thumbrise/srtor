@@ -21,7 +21,8 @@ type Processor struct {
 	numThreads    int
 	resultDirName string
 	needReplace   bool
-	forArchive    map[string][]string
+	bar           *progressbar.ProgressBar
+	sync.Mutex
 }
 
 type fileInfo struct {
@@ -38,7 +39,6 @@ func NewProcessor(langSource string, langTarget string, resultDirName string) *P
 		langTarget:    langTarget,
 		numThreads:    runtime.NumCPU(),
 		resultDirName: resultDirName,
-		forArchive:    make(map[string][]string),
 	}
 }
 
@@ -47,36 +47,52 @@ func (p *Processor) WithReplace(v bool) *Processor {
 	return p
 }
 
-func (p *Processor) Process(files []string) {
-	filesLen := len(files)
+func (p *Processor) Process(paths []string) {
+	filesLen := len(paths)
 
 	if filesLen == 0 {
 		return
 	}
 
-	bar := newProgressBar(filesLen)
+	p.bar = newProgressBar(filesLen)
+
+	files := make([]*fileInfo, 0)
+	for _, path := range paths {
+		file, err := p.evaluateFile(path)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		files = append(files, file)
+	}
+
 	chunks, err := util.SliceSplit(files, p.numThreads)
 	if err != nil {
 		log.Println(err)
 	}
+	//make(chan int)
+	p.threadChunks(chunks)
 
-	p.threadChunks(chunks, func() error {
-		err = bar.Add(1)
-		if err != nil {
-			return err
+	forArchive := make(map[string][]string)
+	if p.needReplace {
+		for _, file := range files {
+
+			err := fsutil.FileSwap(file.sourceFullPath, file.targetFullPath)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			forArchive[file.zipFullPath] = append(forArchive[file.zipFullPath], file.targetFullPath)
 		}
-
-		return nil
-	})
-
-	for zipPath, filePaths := range p.forArchive {
-		err := fsutil.ZipCreate(zipPath, filePaths)
+	}
+	for zipPath, filePaths := range forArchive {
+		err = fsutil.ZipCreate(zipPath, filePaths)
 		if err != nil {
 			log.Fatal(err)
 		}
 
 		for _, filePath := range filePaths {
-			err := os.Remove(filePath)
+			err = os.Remove(filePath)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -84,19 +100,29 @@ func (p *Processor) Process(files []string) {
 	}
 }
 
-func (p *Processor) threadChunks(chunks [][]string, onFileProcessed func() error) {
+func (p *Processor) threadChunks(chunks [][]*fileInfo) {
 	wg := sync.WaitGroup{}
 
 	for i := range chunks {
 		wg.Add(1)
 
 		chunk := chunks[i]
-		go func(paths []string) {
+		go func(files []*fileInfo) {
 			defer wg.Done()
-			err := p.processReal(paths, onFileProcessed)
+
+			for _, file := range files {
+				err := p.processFile(file)
+				if err != nil {
+					log.Println(err)
+				}
+			}
+
+			p.Lock()
+			err := p.bar.Add(1)
 			if err != nil {
 				log.Println(err)
 			}
+			p.Unlock()
 		}(chunk)
 	}
 
@@ -128,23 +154,9 @@ func (p *Processor) evaluateFile(path string) (*fileInfo, error) {
 	return r, nil
 }
 
-func (p *Processor) processReal(paths []string, onFileProcessed func() error) error {
-	files := make([]*fileInfo, 0)
-	for _, path := range paths {
-		file, err := p.evaluateFile(path)
-		if err != nil {
-			return err
-		}
-
-		files = append(files, file)
-	}
+func (p *Processor) processReal(files []*fileInfo) error {
 	for _, file := range files {
 		err := p.processFile(file)
-		if err != nil {
-			return err
-		}
-
-		err = onFileProcessed()
 		if err != nil {
 			return err
 		}
@@ -170,16 +182,6 @@ func (p *Processor) processFile(file *fileInfo) error {
 	if err != nil {
 		log.Println(err)
 		return err
-	}
-
-	if p.needReplace {
-		err := fsutil.FileSwap(file.sourceFullPath, file.targetFullPath)
-		if err != nil {
-			log.Println(err)
-			return err
-		}
-
-		p.forArchive[file.zipFullPath] = append(p.forArchive[file.zipFullPath], file.targetFullPath)
 	}
 
 	return nil
