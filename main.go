@@ -6,7 +6,6 @@ import (
 	"srtor/pkg/interaction"
 	"srtor/pkg/processing"
 	"srtor/pkg/util"
-	"strings"
 )
 
 const resultDirName = "srtor-result"
@@ -22,27 +21,16 @@ func main() {
 
 	languageSource := interaction.AskLanguageSource()
 	languageTarget := interaction.AskLanguageTarget()
-
 	needRecursive := interaction.AskRecursive()
-	files, err := fsutil.ScanDirByExtension(directory, translatableExtension, needRecursive)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	files = util.SliceFilter(files, func(v string) bool {
-		return !strings.Contains(v, resultDirName)
-	})
-
 	needReplace := interaction.AskReplace()
-	needArchive := false
-	if needReplace {
-		needArchive = interaction.AskArchive()
-	}
+
+	files := scanDir(directory, needRecursive)
+	files = filterNonTranslatable(files)
+	files = filterResultDirs(files)
 
 	processing.
 		NewProcessor(languageSource, languageTarget, resultDirName).
 		WithReplace(needReplace).
-		WithArchive(needArchive).
 		Process(files)
 
 	interaction.Bye(len(files), directory)
@@ -50,4 +38,22 @@ func main() {
 
 func configureLogger() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
+}
+
+// need for prevent recursive creating
+func filterResultDirs(files []string) []string {
+	return util.SliceFilterByContains(files, resultDirName)
+}
+
+func filterNonTranslatable(files []string) []string {
+	return util.SliceFilterBySuffix(files, translatableExtension)
+}
+
+func scanDir(path string, recursive bool) []string {
+	result, err := fsutil.DirScan(path, recursive)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return result
 }
