@@ -1,4 +1,5 @@
 # srtor
+<img src="https://github.com/thumbrise/srtor/assets/61841057/cd1f04d1-9e58-4289-ba20-a3251f36a169" width="419px" />
 
 Переводчик субтитров в формате srt.
 
