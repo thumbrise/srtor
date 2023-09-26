@@ -153,7 +153,7 @@ func (p *Processor) evaluateFile(path string) (*fileInfo, error) {
 	return r, nil
 }
 
-func (p *Processor) processReal(files []*fileInfo) error {
+func (p *Processor) processFiles(files []*fileInfo) error {
 	for _, file := range files {
 		err := p.processFile(file)
 		if err != nil {
