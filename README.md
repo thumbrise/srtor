@@ -1,7 +1,7 @@
+[![Test](https://github.com/thumbrise/srtor/actions/workflows/master-test.yml/badge.svg)](https://github.com/thumbrise/srtor/actions/workflows/master-test.yml)
+[![Build](https://github.com/thumbrise/srtor/actions/workflows/master-build.yml/badge.svg)](https://github.com/thumbrise/srtor/actions/workflows/master-build.yml)
 [![en](https://img.shields.io/badge/lang-en-red.svg)](https://github.com/thumbrise/srtor/blob/master/README.md)
 [![ru](https://img.shields.io/badge/lang-ru-green.svg)](https://github.com/thumbrise/srtor/blob/master/README.ru.md)
-[![Tests/Build](https://github.com/thumbrise/srtor/actions/workflows/pipeline.yml/badge.svg)](https://github.com/thumbrise/srtor/actions/workflows/pipeline.yml)
-
 # srtor
 <img src="https://github.com/thumbrise/srtor/assets/61841057/cd1f04d1-9e58-4289-ba20-a3251f36a169" width="419px" />
 
