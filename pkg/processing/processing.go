@@ -2,6 +2,7 @@ package processing
 
 import (
 	"errors"
+	"fmt"
 	"github.com/schollz/progressbar/v3"
 	"log"
 	"os"
@@ -85,7 +86,7 @@ func (p *Processor) Process(paths []string) {
 		}
 	}
 	for zipPath, filePaths := range forArchive {
-		err = fsutil.ZipCreate(zipPath, filePaths)
+		_, err = fsutil.ZipCreate(zipPath, filePaths)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -112,6 +113,7 @@ func (p *Processor) threadChunks(chunks [][]*fileInfo) {
 			for _, file := range files {
 				err := p.processFile(file)
 				if err != nil {
+					err = fmt.Errorf("error on file %s\n%v", file.sourceFullPath, err)
 					log.Println(err)
 				}
 			}
@@ -151,17 +153,6 @@ func (p *Processor) evaluateFile(path string) (*fileInfo, error) {
 	}
 
 	return r, nil
-}
-
-func (p *Processor) processReal(files []*fileInfo) error {
-	for _, file := range files {
-		err := p.processFile(file)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
 }
 
 func (p *Processor) processFile(file *fileInfo) error {

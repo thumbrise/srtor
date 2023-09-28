@@ -22,7 +22,7 @@ func TestZipCreate(t *testing.T) {
 	filePaths := []string{filePath}
 
 	//Act
-	err = ZipCreate(zipPath, filePaths)
+	_, err = ZipCreate(zipPath, filePaths)
 	if err != nil {
 		t.Fatal(err)
 		return

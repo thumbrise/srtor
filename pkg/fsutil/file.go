@@ -1,9 +1,13 @@
 package fsutil
 
 import (
+	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"srtor/pkg/util"
+	"strconv"
 )
 
 func FileReadAsString(path string) (string, error) {
@@ -34,13 +38,13 @@ func FileWrite(text string, path string) error {
 }
 
 func FileSwap(a, b string) error {
-	_, aStatErr := os.Stat(a)
-	_, bStatErr := os.Stat(b)
-	if os.IsNotExist(aStatErr) {
-		return bStatErr
+	if FileNotExists(a) {
+		message := fmt.Sprintf("File not exist %s", a)
+		return errors.New(message)
 	}
-	if os.IsNotExist(bStatErr) {
-		return bStatErr
+	if FileNotExists(b) {
+		message := fmt.Sprintf("File not exist %s", a)
+		return errors.New(message)
 	}
 
 	aTemp := a + ".temp"
@@ -64,11 +68,37 @@ func FileSwap(a, b string) error {
 }
 
 func FileOpenOrCreate(path string) (*os.File, error) {
-	_, err := os.Stat(path)
-
-	if os.IsNotExist(err) {
+	if FileNotExists(path) {
 		return os.Create(path)
 	}
 
 	return os.Open(path)
+}
+
+func FileExists(path string) bool {
+	info, err := os.Stat(path)
+	if os.IsNotExist(err) {
+		return false
+	}
+
+	return !info.IsDir()
+}
+
+func FileNotExists(path string) bool {
+	return !FileExists(path)
+}
+
+func FileIncrementName(path string) string {
+	r := regexp.MustCompile(`(.*?)(\d*)(\..*)?$`)
+	matches := r.FindStringSubmatch(path)
+
+	name, number, extension := matches[1], matches[2], matches[3]
+
+	numberConverted, err := strconv.Atoi(number)
+	if err != nil {
+		const numberDefault = 2
+		return fmt.Sprintf("%s%d%s", name, numberDefault, extension)
+	}
+
+	return fmt.Sprintf("%s%d%s", name, numberConverted+1, extension)
 }
