@@ -125,3 +125,28 @@ func TestFileExists(t *testing.T) {
 		t.Errorf("Expected directory . to not be a file, but it is")
 	}
 }
+func TestFileIncrementName(t *testing.T) {
+	// Test with a file name that doesn't have a number
+	result := FileIncrementName("file.txt")
+	if result != "file2.txt" {
+		t.Errorf("Expected file2.txt, but got %s", result)
+	}
+
+	// Test with a file name that has a number
+	result = FileIncrementName("file1.txt")
+	if result != "file2.txt" {
+		t.Errorf("Expected file2.txt, but got %s", result)
+	}
+
+	// Test with a file name that has a number and extension
+	result = FileIncrementName("file1.txt.gz")
+	if result != "file2.txt.gz" {
+		t.Errorf("Expected file2.txt.gz, but got %s", result)
+	}
+
+	// Test with a file name that has a number and multiple extensions
+	result = FileIncrementName("file1.tar.gz")
+	if result != "file2.tar.gz" {
+		t.Errorf("Expected file2.tar.gz, but got %s", result)
+	}
+}

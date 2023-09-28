@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"srtor/pkg/util"
+	"strconv"
 )
 
 func FileReadAsString(path string) (string, error) {
@@ -72,6 +74,7 @@ func FileOpenOrCreate(path string) (*os.File, error) {
 
 	return os.Open(path)
 }
+
 func FileExists(path string) bool {
 	info, err := os.Stat(path)
 	if os.IsNotExist(err) {
@@ -80,6 +83,22 @@ func FileExists(path string) bool {
 
 	return !info.IsDir()
 }
+
 func FileNotExists(path string) bool {
 	return !FileExists(path)
+}
+
+func FileIncrementName(path string) string {
+	r := regexp.MustCompile(`(.*?)(\d*)(\..*)?$`)
+	matches := r.FindStringSubmatch(path)
+
+	name, number, extension := matches[1], matches[2], matches[3]
+
+	numberConverted, err := strconv.Atoi(number)
+	if err != nil {
+		const numberDefault = 2
+		return fmt.Sprintf("%s%d%s", name, numberDefault, extension)
+	}
+
+	return fmt.Sprintf("%s%d%s", name, numberConverted+1, extension)
 }
