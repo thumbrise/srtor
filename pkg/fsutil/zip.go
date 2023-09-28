@@ -8,6 +8,9 @@ import (
 )
 
 func ZipCreate(zipPath string, filePaths []string) (string, error) {
+	if FileExists(zipPath) {
+		zipPath = FileIncrementName(zipPath)
+	}
 	zipF, err := os.Create(zipPath)
 	if err != nil {
 		return "", err
