@@ -102,3 +102,26 @@ func TestFileOpenOrCreate(t *testing.T) {
 		})
 	}
 }
+
+func TestFileExists(t *testing.T) {
+	file, err := os.CreateTemp("", "testfile")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.Remove(file.Name())
+
+	exists := FileExists(file.Name())
+	if !exists {
+		t.Errorf("Expected file %s to exist, but it doesn't", file.Name())
+	}
+
+	exists = FileExists("nonexistentfile")
+	if exists {
+		t.Errorf("Expected file nonexistentfile to not exist, but it does")
+	}
+
+	exists = FileExists(".")
+	if exists {
+		t.Errorf("Expected directory . to not be a file, but it is")
+	}
+}

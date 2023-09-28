@@ -7,10 +7,10 @@ import (
 	"path/filepath"
 )
 
-func ZipCreate(zipPath string, filePaths []string) error {
+func ZipCreate(zipPath string, filePaths []string) (string, error) {
 	zipF, err := os.Create(zipPath)
 	if err != nil {
-		return err
+		return "", err
 	}
 	defer zipF.Close()
 
@@ -20,11 +20,11 @@ func ZipCreate(zipPath string, filePaths []string) error {
 	for _, filePath := range filePaths {
 		err = zipAddFile(filePath, zipW)
 		if err != nil {
-			return err
+			return zipPath, err
 		}
 	}
 
-	return nil
+	return zipPath, nil
 }
 
 func zipAddFile(filePath string, zipW *zip.Writer) error {

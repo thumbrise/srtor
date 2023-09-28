@@ -86,7 +86,7 @@ func (p *Processor) Process(paths []string) {
 		}
 	}
 	for zipPath, filePaths := range forArchive {
-		err = fsutil.ZipCreate(zipPath, filePaths)
+		_, err = fsutil.ZipCreate(zipPath, filePaths)
 		if err != nil {
 			log.Fatal(err)
 		}
