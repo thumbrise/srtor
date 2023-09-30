@@ -1,20 +1,17 @@
 package processing
 
 import (
-	"errors"
 	"fmt"
-	"github.com/schollz/progressbar/v3"
 	"log"
-	"os"
 	"path/filepath"
 	"runtime"
+	"sync"
+
+	"github.com/schollz/progressbar/v3"
 	"srtor/pkg/fsutil"
 	"srtor/pkg/transl"
 	"srtor/pkg/util"
-	"sync"
 )
-
-var ErrPathNotAbsolute = errors.New("file path is not absolute")
 
 type Processor struct {
 	langSource    string
@@ -22,6 +19,8 @@ type Processor struct {
 	numThreads    int
 	resultDirName string
 	needReplace   bool
+	fileInfos     []*fileInfo
+	zipGroups     map[string][]string
 	bar           *progressbar.ProgressBar
 	sync.Mutex
 }
@@ -40,6 +39,8 @@ func NewProcessor(langSource string, langTarget string, resultDirName string) *P
 		langTarget:    langTarget,
 		numThreads:    runtime.NumCPU(),
 		resultDirName: resultDirName,
+		fileInfos:     make([]*fileInfo, 0),
+		zipGroups:     make(map[string][]string),
 	}
 }
 
@@ -49,64 +50,35 @@ func (p *Processor) WithReplace(v bool) *Processor {
 }
 
 func (p *Processor) Process(paths []string) {
-	filesLen := len(paths)
-
-	if filesLen == 0 {
+	if len(paths) == 0 {
 		return
 	}
 
-	p.bar = newProgressBar(filesLen)
+	p.evaluate(paths)
 
-	files := make([]*fileInfo, 0)
-	for _, path := range paths {
-		file, err := p.evaluateFile(path)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		files = append(files, file)
-	}
-
-	chunks, err := util.SliceSplit(files, p.numThreads)
+	chunks, err := util.SliceSplit(p.fileInfos, p.numThreads)
 	if err != nil {
-		log.Println(err)
+		log.Fatal(err)
 	}
-	p.threadChunks(chunks)
 
-	forArchive := make(map[string][]string)
+	p.bar = newProgressBar(len(paths))
+
+	p.processChunks(chunks)
+
 	if p.needReplace {
-		for _, file := range files {
-
-			err := fsutil.FileSwap(file.sourceFullPath, file.targetFullPath)
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			forArchive[file.zipFullPath] = append(forArchive[file.zipFullPath], file.targetFullPath)
-		}
-	}
-	for zipPath, filePaths := range forArchive {
-		_, err = fsutil.ZipCreate(zipPath, filePaths)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		for _, filePath := range filePaths {
-			err = os.Remove(filePath)
-			if err != nil {
-				log.Fatal(err)
-			}
-		}
+		swap(p.fileInfos)
+		archive(p.zipGroups)
 	}
 }
 
-func (p *Processor) threadChunks(chunks [][]*fileInfo) {
+func (p *Processor) processChunks(chunks [][]*fileInfo) {
 	wg := sync.WaitGroup{}
 
 	for i := range chunks {
 		wg.Add(1)
 
 		chunk := chunks[i]
+
 		go func(files []*fileInfo) {
 			defer wg.Done()
 
@@ -130,15 +102,16 @@ func (p *Processor) threadChunks(chunks [][]*fileInfo) {
 	wg.Wait()
 }
 
-func newProgressBar(length int) *progressbar.ProgressBar {
-	return progressbar.Default(int64(length))
+func (p *Processor) evaluate(paths []string) {
+	for _, path := range paths {
+		file := p.evaluateFile(path)
+
+		p.fileInfos = append(p.fileInfos, file)
+		p.zipGroups[file.zipFullPath] = append(p.zipGroups[file.zipFullPath], file.targetFullPath)
+	}
 }
 
-func (p *Processor) evaluateFile(path string) (*fileInfo, error) {
-	if !filepath.IsAbs(path) {
-		return nil, ErrPathNotAbsolute
-	}
-
+func (p *Processor) evaluateFile(path string) *fileInfo {
 	originalDir := filepath.Dir(path)
 	originalBase := filepath.Base(path)
 	targetFullPath := filepath.Join(originalDir, p.resultDirName, originalBase)
@@ -152,7 +125,7 @@ func (p *Processor) evaluateFile(path string) (*fileInfo, error) {
 		zipFullPath:    zipPath,
 	}
 
-	return r, nil
+	return r
 }
 
 func (p *Processor) processFile(file *fileInfo) error {
