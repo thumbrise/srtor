@@ -7,7 +7,6 @@
 
 Translator of subtitles in srt format.
 
-- No limits
 - No dependencies
 - No installation (portable)
 - Quick translate
