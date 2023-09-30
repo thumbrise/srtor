@@ -5,72 +5,76 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
-	"strings"
 
 	"srtor/pkg/util"
 )
 
 const EnvTranslateDebug = "TRANSLATE_DEBUG"
+const host = "translate.googleapis.com"
+const path = "translate_a/single"
+const scheme = "https"
 
 func Translate(source, sourceLang, targetLang string) (string, error) {
 	if util.EnvGetBool(EnvTranslateDebug) {
 		return source, nil
 	}
 
-	var text []string
-	var result []interface{}
-	u := getUrl(sourceLang, targetLang, source)
-	r, err := http.Get(u)
+	respBytes, err := doRequest(sourceLang, targetLang, source)
 	if err != nil {
-		return "err", errors.New("error getting translate.googleapis.com")
+		return "", err
 	}
 
-	defer r.Body.Close()
-
-	body, err := io.ReadAll(r.Body)
+	result, err := parse(respBytes)
 	if err != nil {
-		return "err", errors.New("error reading response body")
+		return "", err
 	}
 
-	err = json.Unmarshal(body, &result)
-	if err != nil {
-		log.Printf("\nstatus: %v\nresponse:\n%v", r.Status, string(body))
-		return "err", errors.New("error unmarshaling data")
-	}
-
-	if len(result) > 0 {
-		inner := result[0]
-		for _, slice := range inner.([]interface{}) {
-			for _, translatedText := range slice.([]interface{}) {
-				text = append(text, fmt.Sprintf("%v", translatedText))
-				break
-			}
-		}
-		cText := strings.Join(text, "")
-
-		return cText, nil
-	} else {
-		return "err", errors.New("no translated data in responce")
-	}
+	return result, nil
 }
 
-func getUrl(sourceLang string, targetLang string, query string) string {
-	u := url.URL{
-		Scheme:      "https",
-		Opaque:      "",
-		User:        nil,
-		Host:        "translate.googleapis.com",
-		Path:        "translate_a/single",
-		RawPath:     "",
-		OmitHost:    false,
-		ForceQuery:  false,
-		RawQuery:    "",
-		Fragment:    "",
-		RawFragment: "",
+// expected structure s[0][0][0], s[0][1][0], s[0][2][0]...
+//
+//	[
+//		[	<- Target list of elements
+//			[
+//				translatedText,	<- Target field in each element
+//				trash,
+//				trash,
+//				trash...
+//			]...
+//		],
+//		trash,
+//		trash,
+//		trash...
+//	]
+func parse(bytes []byte) (string, error) {
+	var wrapped []interface{}
+
+	err := json.Unmarshal(bytes, &wrapped)
+	if err != nil {
+		return "", err
 	}
+
+	if len(wrapped) <= 0 {
+		msg := fmt.Sprintf("no data in %s response", host)
+		return "err", errors.New(msg)
+	}
+
+	result := ""
+
+	unwrapped := wrapped[0].([]interface{})
+	for _, tData := range unwrapped {
+		tConverted := tData.([]interface{})
+		text := fmt.Sprintf("%v", tConverted[0])
+		result += text
+	}
+
+	return result, nil
+}
+
+func doRequest(sourceLang string, targetLang string, query string) ([]byte, error) {
 	q := url.Values{
 		"client": {"gtx"},
 		"dt":     {"t"},
@@ -78,6 +82,30 @@ func getUrl(sourceLang string, targetLang string, query string) string {
 		"tl":     {targetLang},
 		"q":      {query},
 	}
-	u.RawQuery = q.Encode()
-	return u.String()
+
+	u := url.URL{
+		Host:     host,
+		Scheme:   scheme,
+		Path:     path,
+		RawQuery: q.Encode(),
+	}
+
+	resp, err := http.Get(u.String())
+	if err != nil {
+		msg := fmt.Sprintf("error getting %s", host)
+		return nil, errors.New(msg)
+	}
+	defer resp.Body.Close()
+
+	bytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, errors.New("error reading response body")
+	}
+
+	if resp.StatusCode >= 300 {
+		msg := fmt.Sprintf("bad status (%d) of %s\nresponse:\n%s", resp.StatusCode, host, string(bytes))
+		return nil, errors.New(msg)
+	}
+
+	return bytes, nil
 }
