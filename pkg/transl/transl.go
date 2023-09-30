@@ -8,8 +8,9 @@ import (
 	"log"
 	"net/http"
 	"net/url"
-	"srtor/pkg/util"
 	"strings"
+
+	"srtor/pkg/util"
 )
 
 const EnvTranslateDebug = "TRANSLATE_DEBUG"
@@ -21,13 +22,7 @@ func Translate(source, sourceLang, targetLang string) (string, error) {
 
 	var text []string
 	var result []interface{}
-	encodedSource := url.QueryEscape(source)
-	u := fmt.Sprintf(
-		"https://translate.googleapis.com/translate_a/single?client=gtx&sl=%s&tl=%s&dt=t&q=%s",
-		sourceLang,
-		targetLang,
-		encodedSource,
-	)
+	u := getUrl(sourceLang, targetLang, source)
 	r, err := http.Get(u)
 	if err != nil {
 		return "err", errors.New("error getting translate.googleapis.com")
@@ -60,4 +55,29 @@ func Translate(source, sourceLang, targetLang string) (string, error) {
 	} else {
 		return "err", errors.New("no translated data in responce")
 	}
+}
+
+func getUrl(sourceLang string, targetLang string, query string) string {
+	u := url.URL{
+		Scheme:      "https",
+		Opaque:      "",
+		User:        nil,
+		Host:        "translate.googleapis.com",
+		Path:        "translate_a/single",
+		RawPath:     "",
+		OmitHost:    false,
+		ForceQuery:  false,
+		RawQuery:    "",
+		Fragment:    "",
+		RawFragment: "",
+	}
+	q := url.Values{
+		"client": {"gtx"},
+		"dt":     {"t"},
+		"sl":     {sourceLang},
+		"tl":     {targetLang},
+		"q":      {query},
+	}
+	u.RawQuery = q.Encode()
+	return u.String()
 }
