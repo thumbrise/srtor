@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"srtor/pkg/fsutil"
+	"srtor/pkg/transl"
 	"srtor/pkg/util"
 	"testing"
 )
@@ -63,6 +64,6 @@ func process() {
 	}
 
 	files = util.SliceFilterBySuffix(files, "srt")
-	processor := NewProcessor("en", "ru", resultDirName)
+	processor := NewProcessor(transl.NewEnvBasedTranslator(), "en", "ru", resultDirName)
 	processor.Process(files)
 }

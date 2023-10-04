@@ -5,6 +5,7 @@ import (
 	"srtor/pkg/fsutil"
 	"srtor/pkg/interaction"
 	"srtor/pkg/processing"
+	"srtor/pkg/transl"
 	"srtor/pkg/util"
 )
 
@@ -29,7 +30,7 @@ func main() {
 	files = filterResultDirs(files)
 
 	processing.
-		NewProcessor(languageSource, languageTarget, resultDirName).
+		NewProcessor(transl.NewEnvBasedTranslator(), languageSource, languageTarget, resultDirName).
 		WithReplace(needReplace).
 		Process(files)
 
