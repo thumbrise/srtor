@@ -9,11 +9,11 @@ import (
 
 	"github.com/schollz/progressbar/v3"
 	"srtor/pkg/fsutil"
-	"srtor/pkg/transl"
 	"srtor/pkg/util"
 )
 
 type Processor struct {
+	translator    Translator
 	langSource    string
 	langTarget    string
 	numThreads    int
@@ -33,8 +33,13 @@ type fileInfo struct {
 	zipFullPath    string
 }
 
-func NewProcessor(langSource string, langTarget string, resultDirName string) *Processor {
+type Translator interface {
+	Translate(source string, sourceLang string, targetLang string) (string, error)
+}
+
+func NewProcessor(translator Translator, langSource string, langTarget string, resultDirName string) *Processor {
 	return &Processor{
+		translator:    translator,
 		langSource:    langSource,
 		langTarget:    langTarget,
 		numThreads:    runtime.NumCPU(),
@@ -135,7 +140,7 @@ func (p *Processor) processFile(file *fileInfo) error {
 		return err
 	}
 
-	translatedText, err := transl.Translate(originalText, p.langSource, p.langTarget)
+	translatedText, err := p.translator.Translate(originalText, p.langSource, p.langTarget)
 	if err != nil {
 		log.Println(err)
 		return err

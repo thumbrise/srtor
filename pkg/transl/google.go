@@ -7,20 +7,15 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-
-	"srtor/pkg/util"
 )
 
-const EnvTranslateDebug = "TRANSLATE_DEBUG"
 const host = "translate.googleapis.com"
 const path = "translate_a/single"
 const scheme = "https"
 
-func Translate(source, sourceLang, targetLang string) (string, error) {
-	if util.EnvGetBool(EnvTranslateDebug) {
-		return source, nil
-	}
+type GoogleTranslator struct{}
 
+func (t GoogleTranslator) Translate(source, sourceLang, targetLang string) (string, error) {
 	respBytes, err := doRequest(sourceLang, targetLang, source)
 	if err != nil {
 		return "", err
